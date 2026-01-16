@@ -214,7 +214,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (statusMessage !== 'Saved.') return;
+    if (statusMessage !== '保存しました。') return;
     const timer = setTimeout(() => setStatusMessage(''), 2000);
     return () => clearTimeout(timer);
   }, [statusMessage]);
@@ -247,7 +247,7 @@ export default function App() {
 
   const handleCreateDeck = async () => {
     try {
-      const deck = await apiCreateDeck(`Deck ${decks.length + 1}`);
+      const deck = await apiCreateDeck(`デッキ ${decks.length + 1}`);
       setDecks((prev) => [...prev, deck]);
       setActiveDeckId(deck.id);
       updateDeckState(deck.id, (state) => ({ ...state }));
@@ -422,7 +422,7 @@ export default function App() {
       const session = await apiCreateTerminal();
       updateDeckState(activeDeckId, (state) => {
         const index = state.terminals.length + 1;
-        const terminal = { id: session.id, title: `Terminal ${index}` };
+        const terminal = { id: session.id, title: `ターミナル ${index}` };
         return {
           ...state,
           terminals: [...state.terminals, terminal],

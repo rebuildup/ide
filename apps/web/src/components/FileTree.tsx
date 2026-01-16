@@ -20,7 +20,7 @@ const renderEntries = (
           {entry.type === 'dir' ? (entry.expanded ? '▾' : '▸') : '•'}
         </span>
         <span className="tree-label">{entry.name}</span>
-        {entry.loading ? <span className="tree-meta">Loading...</span> : null}
+        {entry.loading ? <span className="tree-meta">読み込み中...</span> : null}
       </button>
       {entry.expanded && entry.children && entry.children.length > 0
         ? renderEntries(entry.children, depth + 1, onToggleDir, onOpenFile)
