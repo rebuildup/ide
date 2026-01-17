@@ -1,12 +1,14 @@
 {
   "name": "deck-ide-desktop",
+  "description": "Deck IDE server manager for Windows",
+  "author": "Deck IDE",
   "private": true,
   "version": "0.1.0",
   "main": "src/main.cjs",
   "scripts": {
     "dev": "electron .",
     "start": "electron .",
-    "build": "electron-builder --win --x64"
+    "build": "node scripts/prepare.cjs && electron-builder --win --x64"
   },
   "dependencies": {
     "express": "^4.19.2",
@@ -14,34 +16,21 @@
     "ws": "^8.17.0"
   },
   "devDependencies": {
-    "electron": "^30.0.0",
+    "electron": "40.0.0",
     "electron-builder": "^24.13.3"
   },
   "build": {
     "appId": "com.deck.ide",
     "productName": "Deck IDE",
+    "electronVersion": "40.0.0",
     "directories": {
       "output": "dist"
     },
     "files": [
       "package.json",
-      "src/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "../server",
-        "to": "server",
-        "filter": [
-          "**/*"
-        ]
-      },
-      {
-        "from": "../web/dist",
-        "to": "web/dist",
-        "filter": [
-          "**/*"
-        ]
-      }
+      "src/**/*",
+      "server/**/*",
+      "web/dist/**/*"
     ],
     "asarUnpack": [
       "**/node-pty/**"

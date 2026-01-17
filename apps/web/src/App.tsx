@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type FormEvent
-} from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { DeckList } from './components/DeckList';
 import { EditorPane } from './components/EditorPane';
 import { FileTree } from './components/FileTree';
@@ -48,7 +41,6 @@ type UrlState = {
 
 const DEFAULT_ROOT_FALLBACK = import.meta.env.VITE_DEFAULT_ROOT || '';
 const SAVED_MESSAGE = '\u4fdd\u5b58\u3057\u307e\u3057\u305f\u3002';
-const DRAWER_WIDTH = 280;
 
 const LANGUAGE_BY_EXTENSION: Record<string, string> = {
   js: 'javascript',
@@ -104,9 +96,6 @@ const normalizeWorkspacePath = (value: string): string =>
     .replace(/[\\/]+$/, '')
     .replace(/\\/g, '/')
     .toLowerCase();
-
-const clampNumber = (value: number, min: number, max: number): number =>
-  Math.min(max, Math.max(min, value));
 
 const parseUrlState = (): UrlState => {
   if (typeof window === 'undefined') {
@@ -172,9 +161,6 @@ export default function App() {
   const [deckWorkspaceId, setDeckWorkspaceId] = useState('');
   const [deckNameDraft, setDeckNameDraft] = useState('');
   const [isDeckDrawerOpen, setIsDeckDrawerOpen] = useState(false);
-  const [isDeckDrawerDragging, setIsDeckDrawerDragging] = useState(false);
-  const [deckDrawerOffset, setDeckDrawerOffset] = useState(-DRAWER_WIDTH);
-  const deckDrawerOffsetRef = useRef(-DRAWER_WIDTH);
 
   const defaultWorkspaceState = useMemo(
     () => createEmptyWorkspaceState(),
@@ -202,20 +188,13 @@ export default function App() {
     path: workspaceById.get(deck.workspaceId)?.path || deck.root
   }));
 
-  const updateDeckDrawerOffset = useCallback((value: number) => {
-    deckDrawerOffsetRef.current = value;
-    setDeckDrawerOffset(value);
-  }, []);
-
   const openDeckDrawer = useCallback(() => {
     setIsDeckDrawerOpen(true);
-    updateDeckDrawerOffset(0);
-  }, [updateDeckDrawerOffset]);
+  }, []);
 
   const closeDeckDrawer = useCallback(() => {
     setIsDeckDrawerOpen(false);
-    updateDeckDrawerOffset(-DRAWER_WIDTH);
-  }, [updateDeckDrawerOffset]);
+  }, []);
 
   const updateWorkspaceState = useCallback(
     (workspaceId: string, updater: (state: WorkspaceState) => WorkspaceState) => {
@@ -800,38 +779,6 @@ export default function App() {
     }
   };
 
-  const handleDeckHandlePointerDown = (
-    event: React.PointerEvent<HTMLButtonElement>
-  ) => {
-    event.preventDefault();
-    const startX = event.clientX;
-    const startOffset = deckDrawerOffsetRef.current;
-    setIsDeckDrawerDragging(true);
-
-    const handlePointerMove = (moveEvent: PointerEvent) => {
-      const delta = moveEvent.clientX - startX;
-      const next = clampNumber(startOffset + delta, -DRAWER_WIDTH, 0);
-      updateDeckDrawerOffset(next);
-    };
-
-    const handlePointerEnd = () => {
-      setIsDeckDrawerDragging(false);
-      const shouldOpen = deckDrawerOffsetRef.current > -DRAWER_WIDTH / 2;
-      if (shouldOpen) {
-        openDeckDrawer();
-      } else {
-        closeDeckDrawer();
-      }
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerEnd);
-      window.removeEventListener('pointercancel', handlePointerEnd);
-    };
-
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerEnd);
-    window.addEventListener('pointercancel', handlePointerEnd);
-  };
-
   const handleDeckHandleKeyDown = (
     event: React.KeyboardEvent<HTMLButtonElement>
   ) => {
@@ -988,14 +935,9 @@ export default function App() {
           <div className="terminal-layout">
             <button
               type="button"
-              className={`deck-handle ${
-                deckDrawerOffset > -DRAWER_WIDTH + 1 ? 'is-open' : ''
-              }`}
-              onPointerDown={handleDeckHandlePointerDown}
+              className={`deck-handle ${isDeckDrawerOpen ? 'is-open' : ''}`}
+              onClick={handleToggleDeckList}
               onKeyDown={handleDeckHandleKeyDown}
-              style={{
-                left: Math.max(0, deckDrawerOffset + DRAWER_WIDTH)
-              }}
               aria-label={
                 isDeckDrawerOpen
                   ? '\u30c7\u30c3\u30ad\u3092\u9589\u3058\u308b'
@@ -1010,10 +952,7 @@ export default function App() {
               <span className="deck-handle-bars" aria-hidden="true" />
             </button>
             <aside
-              className={`deck-drawer ${
-                isDeckDrawerOpen || isDeckDrawerDragging ? 'is-open' : ''
-              } ${isDeckDrawerDragging ? 'is-dragging' : ''}`}
-              style={{ transform: `translateX(${deckDrawerOffset}px)` }}
+              className={`deck-drawer ${isDeckDrawerOpen ? 'is-open' : ''}`}
             >
               <DeckList
                 decks={deckListItems}
