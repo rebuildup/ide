@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline';"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deck IDE</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f7f7;
+        --panel: #ffffff;
+        --border: #1b1b1b;
+        --ink: #111111;
+        --muted: #666666;
+      }
+      body {
+        margin: 0;
+        font-family: 'Segoe UI', sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      .app {
+        padding: 18px;
+        display: grid;
+        gap: 14px;
+      }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+      .title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .status {
+        font-size: 13px;
+        color: var(--muted);
+        word-break: break-all;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      button {
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--ink);
+        padding: 8px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      button.primary {
+        background: var(--ink);
+        color: var(--panel);
+      }
+      label {
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      input[type='checkbox'] {
+        width: 14px;
+        height: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="panel">
+        <div class="title">Deck IDE Server</div>
+        <div class="status" id="status">Loading...</div>
+        <div class="row">
+          <button class="primary" id="start">Start</button>
+          <button id="stop">Stop</button>
+          <button id="open">Open UI</button>
+        </div>
+      </div>
+      <div class="panel">
+        <label>
+          <input type="checkbox" id="autostart" />
+          Start on login
+        </label>
+      </div>
+    </div>
+    <script src="./renderer.js"></script>
+  </body>
+</html>

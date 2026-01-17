@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent
+} from 'react';
 import { DeckList } from './components/DeckList';
 import { EditorPane } from './components/EditorPane';
 import { FileTree } from './components/FileTree';
@@ -14,6 +21,7 @@ import {
   listDecks,
   listFiles,
   listWorkspaces,
+  listTerminals,
   previewFiles,
   readFile,
   writeFile
@@ -30,6 +38,7 @@ import type {
 
 type AppView = 'workspace' | 'terminal';
 type WorkspaceMode = 'list' | 'editor';
+type ThemeMode = 'light' | 'dark';
 type UrlState = {
   view: AppView;
   workspaceId: string | null;
@@ -39,6 +48,7 @@ type UrlState = {
 
 const DEFAULT_ROOT_FALLBACK = import.meta.env.VITE_DEFAULT_ROOT || '';
 const SAVED_MESSAGE = '\u4fdd\u5b58\u3057\u307e\u3057\u305f\u3002';
+const DRAWER_WIDTH = 280;
 
 const LANGUAGE_BY_EXTENSION: Record<string, string> = {
   js: 'javascript',
@@ -68,7 +78,8 @@ const createEmptyWorkspaceState = (): WorkspaceState => ({
 
 const createEmptyDeckState = (): DeckState => ({
   terminals: [],
-  activeTerminalId: null
+  activeTerminalId: null,
+  terminalsLoaded: false
 });
 
 const toTreeNodes = (entries: FileSystemEntry[]): FileTreeNode[] =>
@@ -94,6 +105,9 @@ const normalizeWorkspacePath = (value: string): string =>
     .replace(/\\/g, '/')
     .toLowerCase();
 
+const clampNumber = (value: number, min: number, max: number): number =>
+  Math.min(max, Math.max(min, value));
+
 const parseUrlState = (): UrlState => {
   if (typeof window === 'undefined') {
     return {
@@ -114,14 +128,28 @@ const parseUrlState = (): UrlState => {
   };
 };
 
+const getInitialTheme = (): ThemeMode => {
+  if (typeof window === 'undefined') {
+    return 'light';
+  }
+  const stored = window.localStorage.getItem('deck-theme');
+  if (stored === 'light' || stored === 'dark') {
+    return stored;
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+};
+
 export default function App() {
   const initialUrlState = parseUrlState();
   const [view, setView] = useState<AppView>(initialUrlState.view);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>(
     initialUrlState.workspaceMode
   );
+  const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(
+  const [editorWorkspaceId, setEditorWorkspaceId] = useState<string | null>(
     initialUrlState.workspaceId ?? null
   );
   const [defaultRoot, setDefaultRoot] = useState(DEFAULT_ROOT_FALLBACK);
@@ -140,6 +168,13 @@ export default function App() {
   const [previewTree, setPreviewTree] = useState<FileTreeNode[]>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [isDeckModalOpen, setIsDeckModalOpen] = useState(false);
+  const [deckWorkspaceId, setDeckWorkspaceId] = useState('');
+  const [deckNameDraft, setDeckNameDraft] = useState('');
+  const [isDeckDrawerOpen, setIsDeckDrawerOpen] = useState(false);
+  const [isDeckDrawerDragging, setIsDeckDrawerDragging] = useState(false);
+  const [deckDrawerOffset, setDeckDrawerOffset] = useState(-DRAWER_WIDTH);
+  const deckDrawerOffsetRef = useRef(-DRAWER_WIDTH);
 
   const defaultWorkspaceState = useMemo(
     () => createEmptyWorkspaceState(),
@@ -147,9 +182,9 @@ export default function App() {
   );
   const defaultDeckState = useMemo(() => createEmptyDeckState(), []);
   const activeWorkspace =
-    workspaces.find((workspace) => workspace.id === activeWorkspaceId) || null;
-  const activeWorkspaceState = activeWorkspaceId
-    ? workspaceStates[activeWorkspaceId] || defaultWorkspaceState
+    workspaces.find((workspace) => workspace.id === editorWorkspaceId) || null;
+  const activeWorkspaceState = editorWorkspaceId
+    ? workspaceStates[editorWorkspaceId] || defaultWorkspaceState
     : defaultWorkspaceState;
   const activeDeckState = activeDeckId
     ? deckStates[activeDeckId] || defaultDeckState
@@ -157,14 +192,30 @@ export default function App() {
   const wsBase = getWsBase();
   const previewRoot = workspacePathDraft.trim() || defaultRoot;
 
-  const decksForWorkspace = activeWorkspaceId
-    ? decks.filter((deck) => deck.workspaceId === activeWorkspaceId)
-    : [];
-  const deckListItems = decksForWorkspace.map((deck) => ({
+  const workspaceById = useMemo(
+    () => new Map(workspaces.map((workspace) => [workspace.id, workspace])),
+    [workspaces]
+  );
+  const deckListItems = decks.map((deck) => ({
     id: deck.id,
     name: deck.name,
-    path: deck.root
+    path: workspaceById.get(deck.workspaceId)?.path || deck.root
   }));
+
+  const updateDeckDrawerOffset = useCallback((value: number) => {
+    deckDrawerOffsetRef.current = value;
+    setDeckDrawerOffset(value);
+  }, []);
+
+  const openDeckDrawer = useCallback(() => {
+    setIsDeckDrawerOpen(true);
+    updateDeckDrawerOffset(0);
+  }, [updateDeckDrawerOffset]);
+
+  const closeDeckDrawer = useCallback(() => {
+    setIsDeckDrawerOpen(false);
+    updateDeckDrawerOffset(-DRAWER_WIDTH);
+  }, [updateDeckDrawerOffset]);
 
   const updateWorkspaceState = useCallback(
     (workspaceId: string, updater: (state: WorkspaceState) => WorkspaceState) => {
@@ -202,10 +253,20 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.dataset.theme = theme;
+    try {
+      window.localStorage.setItem('deck-theme', theme);
+    } catch {
+      // ignore storage errors
+    }
+  }, [theme]);
+
+  useEffect(() => {
     const handlePopState = () => {
       const next = parseUrlState();
       setView(next.view);
-      setActiveWorkspaceId(next.workspaceId ?? null);
+      setEditorWorkspaceId(next.workspaceId ?? null);
       setActiveDeckId(next.deckId ?? null);
       setWorkspaceMode(next.workspaceMode);
     };
@@ -216,13 +277,13 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams();
     params.set('view', view);
-    if (activeWorkspaceId) {
-      params.set('workspace', activeWorkspaceId);
+    if (view === 'workspace' && editorWorkspaceId) {
+      params.set('workspace', editorWorkspaceId);
     }
     if (activeDeckId) {
       params.set('deck', activeDeckId);
     }
-    if (view === 'workspace' && workspaceMode === 'editor' && activeWorkspaceId) {
+    if (view === 'workspace' && workspaceMode === 'editor' && editorWorkspaceId) {
       params.set('mode', 'editor');
     }
     const query = params.toString();
@@ -230,7 +291,7 @@ export default function App() {
       ? `${window.location.pathname}?${query}`
       : window.location.pathname;
     window.history.replaceState(null, '', nextUrl);
-  }, [view, activeWorkspaceId, activeDeckId, workspaceMode]);
+  }, [view, editorWorkspaceId, activeDeckId, workspaceMode]);
 
   useEffect(() => {
     let alive = true;
@@ -238,11 +299,11 @@ export default function App() {
       .then((data) => {
         if (!alive) return;
         setWorkspaces(data);
-        setActiveWorkspaceId((prev) => {
+        setEditorWorkspaceId((prev) => {
           if (prev && data.some((workspace) => workspace.id === prev)) {
             return prev;
           }
-          return data[0]?.id ?? null;
+          return null;
         });
         setWorkspaceStates((prev) => {
           const next = { ...prev };
@@ -294,53 +355,74 @@ export default function App() {
   }, [statusMessage]);
 
   useEffect(() => {
-    if (workspaceMode === 'editor' && !activeWorkspaceId) {
+    if (!activeDeckId) return;
+    const current = deckStates[activeDeckId];
+    if (current?.terminalsLoaded) return;
+    listTerminals(activeDeckId)
+      .then((sessions) => {
+        updateDeckState(activeDeckId, (state) => {
+          const nextActive =
+            state.activeTerminalId &&
+            sessions.some((item) => item.id === state.activeTerminalId)
+              ? state.activeTerminalId
+              : sessions[0]?.id ?? null;
+          return {
+            ...state,
+            terminals: sessions,
+            activeTerminalId: nextActive,
+            terminalsLoaded: true
+          };
+        });
+      })
+      .catch((error: unknown) => {
+        updateDeckState(activeDeckId, (state) => ({
+          ...state,
+          terminalsLoaded: true
+        }));
+        setStatusMessage(
+          `\u30bf\u30fc\u30df\u30ca\u30eb\u3092\u53d6\u5f97\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f: ${getErrorMessage(error)}`
+        );
+      });
+  }, [activeDeckId, deckStates, updateDeckState]);
+
+  useEffect(() => {
+    if (workspaceMode === 'editor' && !editorWorkspaceId) {
       setWorkspaceMode('list');
     }
-  }, [workspaceMode, activeWorkspaceId]);
+  }, [workspaceMode, editorWorkspaceId]);
 
   useEffect(() => {
-    if (!activeWorkspaceId) {
-      setActiveDeckId(null);
+    if (activeDeckId && decks.some((deck) => deck.id === activeDeckId)) {
       return;
     }
-    const workspaceDecks = decks.filter(
-      (deck) => deck.workspaceId === activeWorkspaceId
-    );
-    if (workspaceDecks.length === 0) {
-      setActiveDeckId(null);
-      return;
-    }
-    if (!workspaceDecks.some((deck) => deck.id === activeDeckId)) {
-      setActiveDeckId(workspaceDecks[0].id);
-    }
-  }, [activeWorkspaceId, decks, activeDeckId]);
+    setActiveDeckId(decks[0]?.id ?? null);
+  }, [decks, activeDeckId]);
 
   useEffect(() => {
-    if (!activeWorkspaceId) return;
-    const current = workspaceStates[activeWorkspaceId];
+    if (!editorWorkspaceId) return;
+    const current = workspaceStates[editorWorkspaceId];
     if (current?.tree?.length || current?.treeLoading) return;
-    updateWorkspaceState(activeWorkspaceId, (state) => ({
+    updateWorkspaceState(editorWorkspaceId, (state) => ({
       ...state,
       treeLoading: true,
       treeError: null
     }));
-    listFiles(activeWorkspaceId, '')
+    listFiles(editorWorkspaceId, '')
       .then((entries) => {
-        updateWorkspaceState(activeWorkspaceId, (state) => ({
+        updateWorkspaceState(editorWorkspaceId, (state) => ({
           ...state,
           tree: toTreeNodes(entries),
           treeLoading: false
         }));
       })
       .catch((error: unknown) => {
-        updateWorkspaceState(activeWorkspaceId, (state) => ({
+        updateWorkspaceState(editorWorkspaceId, (state) => ({
           ...state,
           treeLoading: false,
           treeError: getErrorMessage(error)
         }));
       });
-  }, [activeWorkspaceId, updateWorkspaceState, workspaceStates]);
+  }, [editorWorkspaceId, updateWorkspaceState, workspaceStates]);
 
   useEffect(() => {
     if (!isWorkspaceModalOpen) {
@@ -390,7 +472,7 @@ export default function App() {
     try {
       const workspace = await apiCreateWorkspace(resolvedPath);
       setWorkspaces((prev) => [...prev, workspace]);
-      setActiveWorkspaceId(workspace.id);
+      setEditorWorkspaceId(workspace.id);
       setWorkspaceStates((prev) => ({
         ...prev,
         [workspace.id]: createEmptyWorkspaceState()
@@ -404,24 +486,36 @@ export default function App() {
     }
   };
 
-  const handleCreateDeck = async (workspaceId: string | null) => {
-    if (!workspaceId) {
+  const handleOpenDeckModal = () => {
+    if (workspaces.length === 0) {
+      setStatusMessage(
+        '\u30c7\u30c3\u30ad\u3092\u4f5c\u6210\u3059\u308b\u524d\u306b\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9\u3092\u8ffd\u52a0\u3057\u3066\u304f\u3060\u3055\u3044\u3002'
+      );
+      return;
+    }
+    setDeckWorkspaceId(workspaces[0].id);
+    setDeckNameDraft('');
+    setIsDeckModalOpen(true);
+  };
+
+  const handleSubmitDeck = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!deckWorkspaceId) {
       setStatusMessage(
         '\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044\u3002'
       );
       return;
     }
+    const name = deckNameDraft.trim();
     try {
-      const deck = await apiCreateDeck(
-        `\u30c7\u30c3\u30ad ${decks.length + 1}`,
-        workspaceId
-      );
+      const deck = await apiCreateDeck(name, deckWorkspaceId);
       setDecks((prev) => [...prev, deck]);
       setActiveDeckId(deck.id);
       setDeckStates((prev) => ({
         ...prev,
         [deck.id]: createEmptyDeckState()
       }));
+      setIsDeckModalOpen(false);
     } catch (error: unknown) {
       setStatusMessage(
         `\u30c7\u30c3\u30ad\u306e\u4f5c\u6210\u306b\u5931\u6557\u3057\u307e\u3057\u305f: ${getErrorMessage(error)}`
@@ -430,22 +524,22 @@ export default function App() {
   };
 
   const handleRefreshTree = () => {
-    if (!activeWorkspaceId) return;
-    updateWorkspaceState(activeWorkspaceId, (state) => ({
+    if (!editorWorkspaceId) return;
+    updateWorkspaceState(editorWorkspaceId, (state) => ({
       ...state,
       treeLoading: true,
       treeError: null
     }));
-    listFiles(activeWorkspaceId, '')
+    listFiles(editorWorkspaceId, '')
       .then((entries) => {
-        updateWorkspaceState(activeWorkspaceId, (state) => ({
+        updateWorkspaceState(editorWorkspaceId, (state) => ({
           ...state,
           tree: toTreeNodes(entries),
           treeLoading: false
         }));
       })
       .catch((error: unknown) => {
-        updateWorkspaceState(activeWorkspaceId, (state) => ({
+        updateWorkspaceState(editorWorkspaceId, (state) => ({
           ...state,
           treeLoading: false,
           treeError: getErrorMessage(error)
@@ -535,9 +629,9 @@ export default function App() {
   };
 
   const handleToggleDir = (node: FileTreeNode) => {
-    if (!activeWorkspaceId || node.type !== 'dir') return;
+    if (!editorWorkspaceId || node.type !== 'dir') return;
     if (node.expanded) {
-      updateWorkspaceState(activeWorkspaceId, (state) => ({
+      updateWorkspaceState(editorWorkspaceId, (state) => ({
         ...state,
         tree: updateTreeNode(state.tree, node.path, (item) => ({
           ...item,
@@ -547,7 +641,7 @@ export default function App() {
       return;
     }
     if (node.children && node.children.length > 0) {
-      updateWorkspaceState(activeWorkspaceId, (state) => ({
+      updateWorkspaceState(editorWorkspaceId, (state) => ({
         ...state,
         tree: updateTreeNode(state.tree, node.path, (item) => ({
           ...item,
@@ -557,16 +651,16 @@ export default function App() {
       return;
     }
 
-    updateWorkspaceState(activeWorkspaceId, (state) => ({
+    updateWorkspaceState(editorWorkspaceId, (state) => ({
       ...state,
       tree: updateTreeNode(state.tree, node.path, (item) => ({
         ...item,
         loading: true
       }))
     }));
-    listFiles(activeWorkspaceId, node.path)
+    listFiles(editorWorkspaceId, node.path)
       .then((entries) => {
-        updateWorkspaceState(activeWorkspaceId, (state) => ({
+        updateWorkspaceState(editorWorkspaceId, (state) => ({
           ...state,
           tree: updateTreeNode(state.tree, node.path, (item) => ({
             ...item,
@@ -577,7 +671,7 @@ export default function App() {
         }));
       })
       .catch((error: unknown) => {
-        updateWorkspaceState(activeWorkspaceId, (state) => ({
+        updateWorkspaceState(editorWorkspaceId, (state) => ({
           ...state,
           treeError: getErrorMessage(error),
           tree: updateTreeNode(state.tree, node.path, (item) => ({
@@ -589,18 +683,18 @@ export default function App() {
   };
 
   const handleOpenFile = (entry: FileTreeNode) => {
-    if (!activeWorkspaceId || entry.type !== 'file') return;
+    if (!editorWorkspaceId || entry.type !== 'file') return;
     const existing = activeWorkspaceState.files.find(
       (file) => file.path === entry.path
     );
     if (existing) {
-      updateWorkspaceState(activeWorkspaceId, (state) => ({
+      updateWorkspaceState(editorWorkspaceId, (state) => ({
         ...state,
         activeFileId: existing.id
       }));
       return;
     }
-    readFile(activeWorkspaceId, entry.path)
+    readFile(editorWorkspaceId, entry.path)
       .then((data) => {
         const file: EditorFile = {
           id: crypto.randomUUID(),
@@ -610,7 +704,7 @@ export default function App() {
           contents: data.contents,
           dirty: false
         };
-        updateWorkspaceState(activeWorkspaceId, (state) => ({
+        updateWorkspaceState(editorWorkspaceId, (state) => ({
           ...state,
           files: [...state.files, file],
           activeFileId: file.id
@@ -624,8 +718,8 @@ export default function App() {
   };
 
   const handleFileChange = (fileId: string, contents: string) => {
-    if (!activeWorkspaceId) return;
-    updateWorkspaceState(activeWorkspaceId, (state) => ({
+    if (!editorWorkspaceId) return;
+    updateWorkspaceState(editorWorkspaceId, (state) => ({
       ...state,
       files: state.files.map((file) =>
         file.id === fileId ? { ...file, contents, dirty: true } : file
@@ -634,13 +728,13 @@ export default function App() {
   };
 
   const handleSaveFile = async (fileId: string) => {
-    if (!activeWorkspaceId) return;
+    if (!editorWorkspaceId) return;
     const file = activeWorkspaceState.files.find((item) => item.id === fileId);
     if (!file) return;
     setSavingFileId(fileId);
     try {
-      await writeFile(activeWorkspaceId, file.path, file.contents);
-      updateWorkspaceState(activeWorkspaceId, (state) => ({
+      await writeFile(editorWorkspaceId, file.path, file.contents);
+      updateWorkspaceState(editorWorkspaceId, (state) => ({
         ...state,
         files: state.files.map((item) =>
           item.id === fileId ? { ...item, dirty: false } : item
@@ -664,17 +758,19 @@ export default function App() {
       return;
     }
     try {
-      const session = await apiCreateTerminal(activeDeckId);
+      const index = activeDeckState.terminals.length + 1;
+      const title = `\u30bf\u30fc\u30df\u30ca\u30eb ${index}`;
+      const session = await apiCreateTerminal(activeDeckId, title);
       updateDeckState(activeDeckId, (state) => {
-        const index = state.terminals.length + 1;
         const terminal = {
           id: session.id,
-          title: `\u30bf\u30fc\u30df\u30ca\u30eb ${index}`
+          title: session.title || title
         };
         return {
           ...state,
           terminals: [...state.terminals, terminal],
-          activeTerminalId: terminal.id
+          activeTerminalId: terminal.id,
+          terminalsLoaded: true
         };
       });
     } catch (error: unknown) {
@@ -696,8 +792,61 @@ export default function App() {
     setActiveDeckId(deckId);
   };
 
+  const handleToggleDeckList = () => {
+    if (isDeckDrawerOpen) {
+      closeDeckDrawer();
+    } else {
+      openDeckDrawer();
+    }
+  };
+
+  const handleDeckHandlePointerDown = (
+    event: React.PointerEvent<HTMLButtonElement>
+  ) => {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startOffset = deckDrawerOffsetRef.current;
+    setIsDeckDrawerDragging(true);
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      const delta = moveEvent.clientX - startX;
+      const next = clampNumber(startOffset + delta, -DRAWER_WIDTH, 0);
+      updateDeckDrawerOffset(next);
+    };
+
+    const handlePointerEnd = () => {
+      setIsDeckDrawerDragging(false);
+      const shouldOpen = deckDrawerOffsetRef.current > -DRAWER_WIDTH / 2;
+      if (shouldOpen) {
+        openDeckDrawer();
+      } else {
+        closeDeckDrawer();
+      }
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerEnd);
+      window.removeEventListener('pointercancel', handlePointerEnd);
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerEnd);
+    window.addEventListener('pointercancel', handlePointerEnd);
+  };
+
+  const handleDeckHandleKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>
+  ) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleToggleDeckList();
+    }
+  };
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   const handleSelectWorkspace = (workspaceId: string) => {
-    setActiveWorkspaceId(workspaceId);
+    setEditorWorkspaceId(workspaceId);
     setWorkspaceMode('editor');
   };
 
@@ -720,11 +869,16 @@ export default function App() {
   };
 
   const isWorkspaceEditorOpen =
-    workspaceMode === 'editor' && Boolean(activeWorkspaceId);
+    workspaceMode === 'editor' && Boolean(editorWorkspaceId);
 
   return (
     <div className="app" data-view={view}>
-      <SideNav activeView={view} onSelect={setView} />
+      <SideNav
+        activeView={view}
+        onSelect={setView}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
+      />
       <main className="main">
         {view === 'workspace' ? (
           <div className="workspace-view">
@@ -736,11 +890,11 @@ export default function App() {
               >
                 {'\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9\u8ffd\u52a0'}
               </button>
-              <WorkspaceList
-                workspaces={workspaces}
-                activeWorkspaceId={activeWorkspaceId}
-                onSelect={handleSelectWorkspace}
-              />
+            <WorkspaceList
+              workspaces={workspaces}
+              selectedWorkspaceId={editorWorkspaceId}
+              onSelect={handleSelectWorkspace}
+            />
             </div>
             {isWorkspaceEditorOpen ? (
               <div className="workspace-editor-overlay">
@@ -772,8 +926,8 @@ export default function App() {
                     files={activeWorkspaceState.files}
                     activeFileId={activeWorkspaceState.activeFileId}
                     onSelectFile={(fileId) => {
-                      if (!activeWorkspaceId) return;
-                      updateWorkspaceState(activeWorkspaceId, (state) => ({
+                      if (!editorWorkspaceId) return;
+                      updateWorkspaceState(editorWorkspaceId, (state) => ({
                         ...state,
                         activeFileId: fileId
                       }));
@@ -781,6 +935,7 @@ export default function App() {
                     onChangeFile={handleFileChange}
                     onSaveFile={handleSaveFile}
                     savingFileId={savingFileId}
+                    theme={theme}
                   />
                 </div>
               </div>
@@ -831,25 +986,100 @@ export default function App() {
           </div>
         ) : (
           <div className="terminal-layout">
-            <DeckList
-              decks={deckListItems}
-              activeDeckId={activeDeckId}
-              onSelect={handleSelectDeck}
-              onCreate={() => handleCreateDeck(activeWorkspaceId)}
-            />
-            {activeDeckId ? (
-              <TerminalPane
-                terminals={activeDeckState.terminals}
-                activeTerminalId={activeDeckState.activeTerminalId}
-                wsBase={wsBase}
-                onSelectTerminal={handleSelectTerminal}
-                onNewTerminal={handleCreateTerminal}
+            <button
+              type="button"
+              className={`deck-handle ${
+                deckDrawerOffset > -DRAWER_WIDTH + 1 ? 'is-open' : ''
+              }`}
+              onPointerDown={handleDeckHandlePointerDown}
+              onKeyDown={handleDeckHandleKeyDown}
+              style={{
+                left: Math.max(0, deckDrawerOffset + DRAWER_WIDTH)
+              }}
+              aria-label={
+                isDeckDrawerOpen
+                  ? '\u30c7\u30c3\u30ad\u3092\u9589\u3058\u308b'
+                  : '\u30c7\u30c3\u30ad\u3092\u958b\u304f'
+              }
+              title={
+                isDeckDrawerOpen
+                  ? '\u30c7\u30c3\u30ad\u3092\u9589\u3058\u308b'
+                  : '\u30c7\u30c3\u30ad\u3092\u958b\u304f'
+              }
+            >
+              <span className="deck-handle-bars" aria-hidden="true" />
+            </button>
+            <aside
+              className={`deck-drawer ${
+                isDeckDrawerOpen || isDeckDrawerDragging ? 'is-open' : ''
+              } ${isDeckDrawerDragging ? 'is-dragging' : ''}`}
+              style={{ transform: `translateX(${deckDrawerOffset}px)` }}
+            >
+              <DeckList
+                decks={deckListItems}
+                activeDeckId={activeDeckId}
+                onSelect={handleSelectDeck}
+                onCreate={handleOpenDeckModal}
               />
-            ) : (
-              <div className="panel empty-panel">
-                {'\u30c7\u30c3\u30ad\u3092\u4f5c\u6210\u3057\u3066\u304f\u3060\u3055\u3044\u3002'}
+            </aside>
+            <div className="terminal-stage">
+              {activeDeckId ? (
+                <TerminalPane
+                  terminals={activeDeckState.terminals}
+                  activeTerminalId={activeDeckState.activeTerminalId}
+                  wsBase={wsBase}
+                  onSelectTerminal={handleSelectTerminal}
+                  onNewTerminal={handleCreateTerminal}
+                />
+              ) : (
+                <div className="panel empty-panel">
+                  {'\u30c7\u30c3\u30ad\u3092\u4f5c\u6210\u3057\u3066\u304f\u3060\u3055\u3044\u3002'}
+                </div>
+              )}
+            </div>
+            {isDeckModalOpen ? (
+              <div className="modal-backdrop" role="dialog" aria-modal="true">
+                <form className="modal" onSubmit={handleSubmitDeck}>
+                  <div className="modal-title">
+                    {'\u30c7\u30c3\u30ad\u4f5c\u6210'}
+                  </div>
+                  <label className="field">
+                    <span>{'\u30c7\u30c3\u30ad\u540d (\u4efb\u610f)'}</span>
+                    <input
+                      type="text"
+                      value={deckNameDraft}
+                      placeholder={'\u7a7a\u767d\u306e\u307e\u307e\u3067\u3082OK'}
+                      onChange={(event) => setDeckNameDraft(event.target.value)}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>{'\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9'}</span>
+                    <select
+                      value={deckWorkspaceId}
+                      onChange={(event) => setDeckWorkspaceId(event.target.value)}
+                    >
+                      {workspaces.map((workspace) => (
+                        <option key={workspace.id} value={workspace.id}>
+                          {workspace.path}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="modal-actions">
+                    <button
+                      type="button"
+                      className="ghost-button"
+                      onClick={() => setIsDeckModalOpen(false)}
+                    >
+                      {'\u30ad\u30e3\u30f3\u30bb\u30eb'}
+                    </button>
+                    <button type="submit" className="primary-button">
+                      {'\u4f5c\u6210'}
+                    </button>
+                  </div>
+                </form>
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </main>

@@ -29,9 +29,11 @@ export function DeckList({
           <div className="panel-title">{LABEL_DECK}</div>
           <div className="panel-subtitle">{LABEL_MULTI}</div>
         </div>
-        <button type="button" className="chip" onClick={onCreate}>
-          {LABEL_CREATE}
-        </button>
+        <div className="deck-actions">
+          <button type="button" className="chip" onClick={onCreate}>
+            {LABEL_CREATE}
+          </button>
+        </div>
       </div>
       <div className="panel-body">
         {decks.length === 0 ? (

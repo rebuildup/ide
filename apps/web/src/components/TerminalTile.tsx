@@ -23,6 +23,7 @@ export function TerminalTile({
 }: TerminalTileProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
+  const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) {
@@ -45,13 +46,25 @@ export function TerminalTile({
     fitAddon.fit();
     term.write(`${TEXT_BOOT}${session.title}\r\n\r\n`);
 
+    const sendResize = () => {
+      const socket = socketRef.current;
+      if (!socket || socket.readyState !== WebSocket.OPEN) return;
+      const cols = term.cols;
+      const rows = term.rows;
+      if (!cols || !rows) return;
+      socket.send(`\u0000resize:${cols},${rows}`);
+    };
+
     const resizeObserver = new ResizeObserver(() => {
       fitAddon.fit();
+      sendResize();
     });
     resizeObserver.observe(containerRef.current);
 
     const socket = new WebSocket(wsUrl);
+    socketRef.current = socket;
     socket.addEventListener('open', () => {
+      sendResize();
       term.write(`\r\n${TEXT_CONNECTED}\r\n\r\n`);
     });
     socket.addEventListener('message', (event) => {
@@ -71,6 +84,7 @@ export function TerminalTile({
       resizeObserver.disconnect();
       dataDisposable.dispose();
       socket.close();
+      socketRef.current = null;
       fitAddonRef.current = null;
       term.dispose();
     };

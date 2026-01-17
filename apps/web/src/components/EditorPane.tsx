@@ -9,6 +9,7 @@ interface EditorPaneProps {
   onChangeFile: (fileId: string, contents: string) => void;
   onSaveFile?: (fileId: string) => void;
   savingFileId: string | null;
+  theme: 'light' | 'dark';
 }
 
 const LABEL_EDITOR = '\u30a8\u30c7\u30a3\u30bf';
@@ -22,7 +23,8 @@ export function EditorPane({
   onSelectFile,
   onChangeFile,
   onSaveFile,
-  savingFileId
+  savingFileId,
+  theme
 }: EditorPaneProps) {
   const activeFile = files.find((file) => file.id === activeFileId);
 
@@ -75,7 +77,7 @@ export function EditorPane({
         {activeFile ? (
           <Editor
             height="100%"
-            theme="vs-dark"
+            theme={theme === 'dark' ? 'vs-dark' : 'vs'}
             language={activeFile.language}
             value={activeFile.contents}
             onChange={(value) => onChangeFile(activeFile.id, value ?? '')}

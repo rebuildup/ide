@@ -1,0 +1,53 @@
+{
+  "name": "deck-ide-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "main": "src/main.cjs",
+  "scripts": {
+    "dev": "electron .",
+    "start": "electron .",
+    "build": "electron-builder --win --x64"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "node-pty": "^1.0.0",
+    "ws": "^8.17.0"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.deck.ide",
+    "productName": "Deck IDE",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "package.json",
+      "src/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../server",
+        "to": "server",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../web/dist",
+        "to": "web/dist",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "asarUnpack": [
+      "**/node-pty/**"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

@@ -2,7 +2,7 @@ import type { Workspace } from '../types';
 
 interface WorkspaceListProps {
   workspaces: Workspace[];
-  activeWorkspaceId: string | null;
+  selectedWorkspaceId: string | null;
   onSelect: (workspaceId: string) => void;
 }
 
@@ -11,7 +11,7 @@ const LABEL_EMPTY = '\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9\u304c\u3042\u308
 
 export function WorkspaceList({
   workspaces,
-  activeWorkspaceId,
+  selectedWorkspaceId,
   onSelect
 }: WorkspaceListProps) {
   return (
@@ -29,7 +29,7 @@ export function WorkspaceList({
             <div
               key={workspace.id}
               className={`workspace-item ${
-                workspace.id === activeWorkspaceId ? 'is-active' : ''
+                workspace.id === selectedWorkspaceId ? 'is-active' : ''
               }`}
             >
               <button

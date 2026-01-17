@@ -85,10 +85,22 @@ export function writeFile(
   });
 }
 
-export function createTerminal(deckId: string): Promise<{ id: string }> {
-  return request<{ id: string }>('/api/terminals', {
+export function createTerminal(
+  deckId: string,
+  title?: string
+): Promise<{ id: string; title: string }> {
+  return request<{ id: string; title: string }>('/api/terminals', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ deckId })
+    body: JSON.stringify({ deckId, title })
   });
+}
+
+export function listTerminals(
+  deckId: string
+): Promise<{ id: string; title: string }[]> {
+  const query = new URLSearchParams({ deckId });
+  return request<{ id: string; title: string }[]>(
+    `/api/terminals?${query.toString()}`
+  );
 }
