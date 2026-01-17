@@ -110,8 +110,6 @@ function handleError(res, error) {
   });
 }
 
-createWorkspace(DEFAULT_ROOT);
-
 app.get('/api/workspaces', (req, res) => {
   res.json(Array.from(workspaces.values()));
 });

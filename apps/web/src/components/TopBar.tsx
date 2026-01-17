@@ -9,7 +9,7 @@ interface TopBarProps {
   status?: string;
 }
 
-const LABEL_PROJECT = '\u30d7\u30ed\u30b8\u30a7\u30af\u30c8';
+const LABEL_PROJECT = '\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9';
 const LABEL_TERMINAL = '\u30bf\u30fc\u30df\u30ca\u30eb';
 
 export function TopBar({ view, workspace, apiBase, status }: TopBarProps) {

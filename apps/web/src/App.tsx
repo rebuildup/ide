@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { DeckList } from './components/DeckList';
 import { EditorPane } from './components/EditorPane';
 import { FileTree } from './components/FileTree';
@@ -87,6 +87,7 @@ const normalizeWorkspacePath = (value: string): string =>
 
 export default function App() {
   const [view, setView] = useState<AppView>('terminal');
+  const [workspaceMode, setWorkspaceMode] = useState<'list' | 'editor'>('list');
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
   const [workspaceStates, setWorkspaceStates] = useState<
@@ -97,6 +98,8 @@ export default function App() {
   const [deckStates, setDeckStates] = useState<Record<string, DeckState>>({});
   const [statusMessage, setStatusMessage] = useState('');
   const [savingFileId, setSavingFileId] = useState<string | null>(null);
+  const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
+  const [workspacePathDraft, setWorkspacePathDraft] = useState('');
 
   const defaultWorkspaceState = useMemo(
     () => createEmptyWorkspaceState(),
@@ -162,7 +165,7 @@ export default function App() {
       .catch((error: unknown) => {
         if (!alive) return;
         setStatusMessage(
-          `\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3092\u53d6\u5f97\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f: ${getErrorMessage(error)}`
+          `\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9\u3092\u53d6\u5f97\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f: ${getErrorMessage(error)}`
         );
       });
 
@@ -249,9 +252,9 @@ export default function App() {
     );
     if (exists) {
       setStatusMessage(
-        '\u540c\u3058\u30d1\u30b9\u306e\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u306f\u8ffd\u52a0\u3067\u304d\u307e\u305b\u3093\u3002'
+        '\u540c\u3058\u30d1\u30b9\u306e\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9\u306f\u8ffd\u52a0\u3067\u304d\u307e\u305b\u3093\u3002'
       );
-      return;
+      return null;
     }
     try {
       const workspace = await apiCreateWorkspace(trimmedPath);
@@ -261,17 +264,19 @@ export default function App() {
         ...prev,
         [workspace.id]: createEmptyWorkspaceState()
       }));
+      return workspace;
     } catch (error: unknown) {
       setStatusMessage(
-        `\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3092\u8ffd\u52a0\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f: ${getErrorMessage(error)}`
+        `\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9\u3092\u8ffd\u52a0\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f: ${getErrorMessage(error)}`
       );
+      return null;
     }
   };
 
   const handleCreateDeck = async (workspaceId: string | null) => {
     if (!workspaceId) {
       setStatusMessage(
-        '\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044\u3002'
+        '\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044\u3002'
       );
       return;
     }
@@ -497,26 +502,67 @@ export default function App() {
     setActiveDeckId(deckId);
   };
 
+  const handleSelectWorkspace = (workspaceId: string) => {
+    setActiveWorkspaceId(workspaceId);
+    setWorkspaceMode('editor');
+  };
+
+  const handleCloseWorkspaceEditor = () => {
+    setWorkspaceMode('list');
+  };
+
+  const handleOpenWorkspaceModal = () => {
+    setWorkspacePathDraft('');
+    setIsWorkspaceModalOpen(true);
+  };
+
+  const handleSubmitWorkspace = async (event: FormEvent) => {
+    event.preventDefault();
+    const created = await handleCreateWorkspace(workspacePathDraft);
+    if (created) {
+      setWorkspacePathDraft('');
+      setIsWorkspaceModalOpen(false);
+    }
+  };
+
+  const isWorkspaceEditorOpen =
+    workspaceMode === 'editor' && Boolean(activeWorkspaceId);
+
   return (
     <div className="app" data-view={view}>
       <SideNav activeView={view} onSelect={setView} />
       <main className="main">
         {view === 'workspace' ? (
           <div className="workspace-view">
-            <WorkspaceList
-              workspaces={workspaces}
-              activeWorkspaceId={activeWorkspaceId}
-              defaultPath={DEFAULT_ROOT}
-              onSelect={setActiveWorkspaceId}
-              onCreate={handleCreateWorkspace}
-            />
-            <div className="workspace-editor">
-              {!activeWorkspaceId ? (
-                <div className="panel empty-panel">
-                  {'\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3092\u8ffd\u52a0\u3057\u3066\u304f\u3060\u3055\u3044\u3002'}
+            <div className="workspace-start">
+              <button
+                type="button"
+                className="primary-button"
+                onClick={handleOpenWorkspaceModal}
+              >
+                {'\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9\u8ffd\u52a0'}
+              </button>
+              <WorkspaceList
+                workspaces={workspaces}
+                activeWorkspaceId={activeWorkspaceId}
+                onSelect={handleSelectWorkspace}
+              />
+            </div>
+            {isWorkspaceEditorOpen ? (
+              <div className="workspace-editor-overlay">
+                <div className="workspace-editor-header">
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={handleCloseWorkspaceEditor}
+                  >
+                    {'\u4e00\u89a7\u306b\u623b\u308b'}
+                  </button>
+                  <div className="workspace-meta">
+                    <span>{activeWorkspace?.path}</span>
+                  </div>
                 </div>
-              ) : (
-                <>
+                <div className="workspace-editor-grid">
                   <FileTree
                     root={activeWorkspace?.path || DEFAULT_ROOT}
                     entries={activeWorkspaceState.tree}
@@ -540,9 +586,41 @@ export default function App() {
                     onSaveFile={handleSaveFile}
                     savingFileId={savingFileId}
                   />
-                </>
-              )}
-            </div>
+                </div>
+              </div>
+            ) : null}
+            {isWorkspaceModalOpen ? (
+              <div className="modal-backdrop" role="dialog" aria-modal="true">
+                <form className="modal" onSubmit={handleSubmitWorkspace}>
+                  <div className="modal-title">
+                    {'\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9\u8ffd\u52a0'}
+                  </div>
+                  <label className="field">
+                    <span>{'\u30d1\u30b9'}</span>
+                    <input
+                      type="text"
+                      value={workspacePathDraft}
+                      placeholder={DEFAULT_ROOT}
+                      onChange={(event) =>
+                        setWorkspacePathDraft(event.target.value)
+                      }
+                    />
+                  </label>
+                  <div className="modal-actions">
+                    <button
+                      type="button"
+                      className="ghost-button"
+                      onClick={() => setIsWorkspaceModalOpen(false)}
+                    >
+                      {'\u30ad\u30e3\u30f3\u30bb\u30eb'}
+                    </button>
+                    <button type="submit" className="primary-button">
+                      {'\u8ffd\u52a0'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="terminal-layout">

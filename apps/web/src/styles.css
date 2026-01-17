@@ -2,12 +2,13 @@
 
 :root {
   color-scheme: light;
-  --bg: #ffffff;
-  --bg-soft: #f2f2f2;
+  --bg: #f7f7f7;
+  --bg-soft: #ededed;
   --panel: #ffffff;
-  --border: #111111;
+  --border: #1b1b1b;
   --ink: #111111;
-  --muted: #666666;
+  --muted: #555555;
+  --shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
 }
 
 * {
@@ -72,6 +73,8 @@ body {
 .main {
   padding: 16px 20px 20px;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .panel {
@@ -82,6 +85,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  box-shadow: var(--shadow);
 }
 
 .panel-header {
@@ -105,18 +109,24 @@ body {
 .panel-body {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow: auto;
+}
+
+.chip,
+.primary-button,
+.ghost-button {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
 .chip {
-  border: 1px solid var(--border);
   background: var(--panel);
   color: var(--ink);
-  padding: 6px 12px;
-  border-radius: 999px;
+  padding: 8px 12px;
   font-size: 12px;
-  cursor: pointer;
-  transition: background 150ms ease;
 }
 
 .chip:disabled {
@@ -129,34 +139,56 @@ body {
 }
 
 .workspace-view {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  flex: 1;
+}
+
+.workspace-start {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
   gap: 16px;
+  max-width: 520px;
+  width: 100%;
+}
+
+.workspace-editor-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  border-radius: 24px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  z-index: 2;
   min-height: 0;
 }
 
-.workspace-editor {
-  display: grid;
-  grid-template-rows: 240px minmax(0, 1fr);
-  gap: 16px;
-  min-height: 0;
-}
-
-.workspace-form {
+.workspace-editor-header {
   display: flex;
-  gap: 10px;
-  align-items: flex-end;
-  margin-bottom: 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.workspace-meta {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.workspace-editor-grid {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 16px;
+  min-height: 0;
 }
 
 .field {
   display: grid;
   gap: 4px;
   font-size: 12px;
-}
-
-.workspace-form .field {
-  flex: 1;
 }
 
 .field input {
@@ -167,6 +199,60 @@ body {
   font-family: 'JetBrains Mono', monospace;
 }
 
+.primary-button {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.ghost-button {
+  background: transparent;
+  color: var(--ink);
+  padding: 8px 14px;
+  font-size: 12px;
+}
+
+.ghost-button:hover {
+  background: var(--bg-soft);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: grid;
+  place-items: center;
+  z-index: 20;
+}
+
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 16px;
+  width: min(420px, 92vw);
+  display: grid;
+  gap: 12px;
+}
+
+.modal-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .workspace-item {
   display: grid;
   gap: 8px;
@@ -175,9 +261,12 @@ body {
   border: 1px solid var(--border);
   margin-bottom: 10px;
   background: var(--panel);
+  transition: background 150ms ease, transform 150ms ease;
 }
 
-.workspace-item.is-active {
+.workspace-item.is-active,
+.workspace-item:hover,
+.workspace-item:focus-within {
   background: var(--bg-soft);
 }
 
@@ -187,6 +276,7 @@ body {
   text-align: left;
   padding: 0;
   cursor: pointer;
+  width: 100%;
 }
 
 .workspace-name {
@@ -211,9 +301,12 @@ body {
   margin-bottom: 8px;
   display: grid;
   gap: 4px;
+  transition: background 150ms ease, transform 150ms ease;
 }
 
-.deck-item.is-active {
+.deck-item.is-active,
+.deck-item:hover,
+.deck-item:focus-visible {
   background: var(--bg-soft);
 }
 
@@ -229,6 +322,10 @@ body {
 
 .tree-body {
   overflow-y: auto;
+}
+
+.file-tree .panel-body {
+  overflow: hidden;
 }
 
 .tree-row {
@@ -306,6 +403,13 @@ body {
   border-radius: 999px;
   font-size: 12px;
   cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.tab:hover,
+.tab:focus-visible {
+  color: var(--ink);
+  background: var(--bg-soft);
 }
 
 .tab.is-active {
@@ -317,6 +421,7 @@ body {
   grid-template-columns: 320px minmax(0, 1fr);
   gap: 16px;
   min-height: 0;
+  flex: 1;
 }
 
 .terminal-view {
@@ -327,6 +432,8 @@ body {
   flex-direction: column;
   min-height: 0;
   gap: 12px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
 }
 
 .terminal-header {
@@ -352,9 +459,9 @@ body {
 }
 
 .terminal-tile {
-  border: 1px solid var(--border);
+  border: 1px solid #2a2a2a;
   border-radius: 24px;
-  background: #000000;
+  background: #050505;
   color: #ffffff;
   min-width: 320px;
   min-height: 220px;
@@ -362,10 +469,12 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
 .terminal-tile.is-active {
-  outline: 2px solid var(--border);
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }
 
 .terminal-tile-header {
@@ -389,6 +498,12 @@ body {
   font-size: 14px;
 }
 
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
 .status-float {
   position: fixed;
   right: 20px;
@@ -406,12 +521,12 @@ body {
 }
 
 @media (max-width: 1024px) {
-  .workspace-view,
   .terminal-layout {
     grid-template-columns: 1fr;
   }
 
-  .workspace-editor {
+  .workspace-editor-grid {
+    grid-template-columns: 1fr;
     grid-template-rows: 220px minmax(0, 1fr);
   }
 }
