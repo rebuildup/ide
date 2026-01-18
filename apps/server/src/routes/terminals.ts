@@ -44,15 +44,30 @@ export function createTerminalRouter(
       }
     }
     env.TERM = env.TERM || 'xterm-256color';
+    // Force UTF-8 for ConPTY
+    if (process.platform === 'win32') {
+      env.LANG = 'en_US.UTF-8';
+    }
 
+    const isWindows = process.platform === 'win32';
     let term;
     try {
-      term = spawn(shell, [], {
+      const spawnOptions: any = {
         cwd: deck.root,
         cols: 120,
         rows: 32,
         env
-      });
+      };
+
+      // Use ConPTY on Windows for better TUI support
+      if (isWindows) {
+        spawnOptions.useConpty = true;
+        // Don't set encoding on Windows - ConPTY handles it automatically
+      } else {
+        spawnOptions.encoding = 'utf8';
+      }
+
+      term = spawn(shell, [], spawnOptions);
     } catch (spawnError) {
       const message = spawnError instanceof Error ? spawnError.message : 'Failed to spawn terminal';
       console.error(`Failed to spawn terminal for deck ${deck.id}:`, spawnError);
@@ -74,19 +89,37 @@ export function createTerminalRouter(
 
     // Set up data handler
     try {
-      session.dispose = term.onData((data) => {
+      session.dispose = term.onData((data: string) => {
         try {
           appendToTerminalBuffer(session, data);
           session.lastActive = Date.now();
+
+          // Debug: Log escape sequences for TUI debugging
+          if (process.env.DEBUG_TERMINAL) {
+            const buffer = Buffer.from(data, 'utf8');
+            const hexDump = buffer.toString('hex').match(/.{1,2}/g)?.join(' ') || '';
+            if (data.includes('\x1b') || data.includes('\x07')) {
+              console.log(`[TERM ${id}] Escape seq (${data.length} bytes): ${hexDump.slice(0, 200)}`);
+            }
+          }
+
+          // Send data to all connected websockets
+          const deadSockets = new Set<WebSocket>();
           session.sockets.forEach((socket) => {
             try {
               if (socket.readyState === 1) {
                 socket.send(data);
+              } else if (socket.readyState > 1) {
+                deadSockets.add(socket);
               }
             } catch (sendError) {
               console.error(`Failed to send data to socket:`, sendError);
+              deadSockets.add(socket);
             }
           });
+
+          // Clean up dead sockets
+          deadSockets.forEach(socket => session.sockets.delete(socket));
         } catch (dataError) {
           console.error(`Error in terminal data handler:`, dataError);
         }

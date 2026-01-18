@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { Terminal, type IDisposable } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
+import { Unicode11Addon } from 'xterm-addon-unicode11';
+import { WebLinksAddon } from 'xterm-addon-web-links';
+import { WebglAddon } from 'xterm-addon-webgl';
 import 'xterm/css/xterm.css';
 import type { TerminalSession } from '../types';
 import {
@@ -39,15 +42,43 @@ export function TerminalTile({
       cursorBlink: true,
       fontFamily: TERMINAL_FONT_FAMILY,
       fontSize: TERMINAL_FONT_SIZE,
+      allowProposedApi: true,
+      scrollback: 10000,
+      convertEol: false,
+      // Don't use windowsMode with ConPTY - it handles line discipline itself
+      windowsMode: false,
       theme: {
         background: TERMINAL_BACKGROUND_COLOR,
         foreground: TERMINAL_FOREGROUND_COLOR
       }
     });
+
+    // Load addons for better TUI support
     const fitAddon = new FitAddon();
+    const unicode11Addon = new Unicode11Addon();
+    const webLinksAddon = new WebLinksAddon();
+
     term.loadAddon(fitAddon);
+    term.loadAddon(unicode11Addon);
+    term.loadAddon(webLinksAddon);
+
+    // Enable Unicode 11 for proper emoji and wide character support
+    term.unicode.activeVersion = '11';
+
     fitAddonRef.current = fitAddon;
     term.open(containerRef.current);
+
+    // Load WebGL addon for better rendering performance (may fail on some systems)
+    try {
+      const webglAddon = new WebglAddon();
+      webglAddon.onContextLoss(() => {
+        webglAddon.dispose();
+      });
+      term.loadAddon(webglAddon);
+    } catch {
+      console.warn('WebGL addon failed to load, using canvas renderer');
+    }
+
     fitAddon.fit();
     term.write(`${TEXT_BOOT}${session.title}\r\n\r\n`);
 
@@ -68,12 +99,16 @@ export function TerminalTile({
 
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
+
     socket.addEventListener('open', () => {
       sendResize();
       term.write(`\r\n${TEXT_CONNECTED}\r\n\r\n`);
     });
     socket.addEventListener('message', (event) => {
-      term.write(event.data);
+      // All messages are strings (UTF-8 encoded)
+      if (typeof event.data === 'string') {
+        term.write(event.data);
+      }
     });
     socket.addEventListener('close', () => {
       term.write(`\r\n${TEXT_CLOSED}\r\n\r\n`);

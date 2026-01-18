@@ -49,7 +49,7 @@ export const EDITOR_FONT_FAMILY = '"JetBrains Mono", monospace';
 export const EDITOR_FONT_SIZE = 14;
 
 // Terminal configuration
-export const TERMINAL_FONT_FAMILY = '"JetBrains Mono", monospace';
+export const TERMINAL_FONT_FAMILY = '"Cascadia Code", "JetBrains Mono", "Consolas", "Menlo", monospace';
 export const TERMINAL_FONT_SIZE = 13;
 export const TERMINAL_BACKGROUND_COLOR = '#000000';
 export const TERMINAL_FOREGROUND_COLOR = '#ffffff';

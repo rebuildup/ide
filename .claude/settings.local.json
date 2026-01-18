@@ -1,33 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm ls:*)",
       "Bash(npm run build:server:*)",
-      "Bash(npm run build:web:*)",
-      "Bash(npm run build:desktop:*)",
-      "Bash(npx tsc:*)",
-      "Bash(taskkill:*)",
-      "Bash(npm install:*)",
-      "Bash(npm run typecheck:*)",
-      "Bash(git checkout:*)",
-      "Bash(git stash)",
-      "Bash(node -c:*)",
       "Bash(npm run build:*)",
-      "Bash(git log:*)",
-      "Bash(git add:*)",
-      "Bash(node --check:*)",
-      "Bash(find . -type f -name \"*.ts\" -exec sh -c 'echo \"\"{}:\"\"; wc -l \"\"{}\"\" | awk \"\"{print \\\\$1}\"\"' ;)",
-      "Bash(timeout 5 npm start)",
-      "Bash(tree:*)",
-      "Bash(wc:*)",
-      "Bash(exit 0)",
-      "Bash(set PORT=8788)",
-      "Bash(powershell -Command \"$env:PORT=''9999''; timeout 5 node dist/index.js\")",
-      "Bash(npm run check:*)",
-      "Bash(npx madge:*)",
-      "Bash(npm run:*)",
-      "Bash(node -e:*)",
-      "Bash(dir \"C:\\\\Users\\\\shout\\\\desktop\\\\github\\\\ide\" /s /b)"
-    ]
+      "Bash(npx tsc:*)"
+    ],
+    "deny": [],
+    "ask": []
   }
 }

@@ -132,8 +132,11 @@ export function setupWebSocketServer(
 
     socket.on('message', (data) => {
       try {
+        // Convert to string
+        const message = data.toString('utf8');
+
         // Check message size
-        const messageSize = Buffer.isBuffer(data) ? data.length : Buffer.byteLength(data.toString());
+        const messageSize = Buffer.byteLength(message, 'utf8');
         if (messageSize > MAX_MESSAGE_SIZE) {
           logSecurityEvent('WS_MESSAGE_TOO_LARGE', { ip: clientIP, size: messageSize });
           socket.send('\r\n\x1b[31mMessage too large. Maximum size is 64KB.\x1b[0m\r\n');
@@ -147,8 +150,8 @@ export function setupWebSocketServer(
         }
 
         session.lastActive = Date.now();
-        const message = data.toString();
 
+        // Check for resize message
         if (message.startsWith('\u0000resize:')) {
           const payload = message.slice('\u0000resize:'.length);
           const [colsRaw, rowsRaw] = payload.split(',');
@@ -164,6 +167,7 @@ export function setupWebSocketServer(
         }
 
         try {
+          // Write user input to terminal
           session.term.write(message);
         } catch (writeError) {
           console.error(`Failed to write to terminal ${id}:`, writeError);
