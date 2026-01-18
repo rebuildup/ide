@@ -296,11 +296,11 @@ export default function App() {
               type="button"
               className={`sidebar-tab ${sidebarPanel === 'files' ? 'active' : ''}`}
               onClick={() => setSidebarPanel('files')}
-              title="Explorer"
             >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="sidebar-tab-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
+              <span className="sidebar-tab-label">ファイル</span>
             </button>
             <button
               type="button"
@@ -309,12 +309,12 @@ export default function App() {
                 setSidebarPanel('git');
                 refreshGitStatus();
               }}
-              title="Source Control"
             >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="sidebar-tab-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M6 3v12M18 9a3 3 0 110 6 3 3 0 010-6zM6 21a3 3 0 110-6 3 3 0 010 6z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                 <path d="M18 12c0 3-3 4-6 4s-6-1-6-4" fill="none" stroke="currentColor" strokeWidth="2" />
               </svg>
+              <span className="sidebar-tab-label">Git</span>
               {gitChangeCount > 0 && (
                 <span className="sidebar-tab-badge">{gitChangeCount}</span>
               )}
