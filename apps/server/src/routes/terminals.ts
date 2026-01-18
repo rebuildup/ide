@@ -43,11 +43,22 @@ export function createTerminalRouter(
         env[key] = value;
       }
     }
+    // Set terminal capabilities for rich TUI support
     env.TERM = env.TERM || 'xterm-256color';
+    env.COLORTERM = 'truecolor'; // Indicate 24-bit color support
+    env.TERM_PROGRAM = 'xterm.js'; // Terminal program name
+    env.TERM_PROGRAM_VERSION = '5.0.0'; // Version
+
     // Force UTF-8 for ConPTY
     if (process.platform === 'win32') {
       env.LANG = 'en_US.UTF-8';
+    } else {
+      env.LANG = env.LANG || 'en_US.UTF-8';
     }
+
+    // Ensure LC_* variables are set for proper locale support
+    env.LC_ALL = env.LC_ALL || 'en_US.UTF-8';
+    env.LC_CTYPE = env.LC_CTYPE || 'en_US.UTF-8';
 
     const isWindows = process.platform === 'win32';
     let term;
@@ -70,6 +81,8 @@ export function createTerminalRouter(
       const spawnStart = Date.now();
       term = spawn(shell, [], spawnOptions);
       const spawnTime = Date.now() - spawnStart;
+
+      console.log(`[TERMINAL] Created terminal ${id} with TERM=${env.TERM}, COLORTERM=${env.COLORTERM}, TERM_PROGRAM=${env.TERM_PROGRAM}`);
       if (spawnTime > 100) {
         console.log(`[PERF] Terminal spawn took ${spawnTime}ms for deck ${deck.id}`);
       }

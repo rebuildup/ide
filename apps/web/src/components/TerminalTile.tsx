@@ -99,17 +99,21 @@ export function TerminalTile({
 
     // DA1 (Primary Device Attributes) - CSI c
     term.parser.registerCsiHandler({ final: 'c' }, (params) => {
-      // Respond as VT100 with some common extensions
+      // Respond as VT220 with rich extensions:
+      // 1 = 132 columns, 2 = printer, 4 = sixel, 6 = selective erase
+      // 7 = soft character set, 8 = user-defined keys, 9 = national replacement character sets
+      // 15 = technical character set, 18 = windowing capability, 22 = ANSI color, 29 = ANSI text locator
       console.log('[DA1] Responding to Primary Device Attributes query');
-      sendResponse('\x1b[?1;2c');
+      // Report as VT220 with 132 cols, printer, sixel, selective erase, UDK, DRCS, NRCS, technical chars, color
+      sendResponse('\x1b[?62;1;2;4;6;7;8;9;15;22c');
       return true;
     });
 
     // DA2 (Secondary Device Attributes) - CSI > c
     term.parser.registerCsiHandler({ prefix: '>', final: 'c' }, (params) => {
-      // Respond as VT220
+      // Respond as VT220 (1) with version 5.0.0 (firmware version)
       console.log('[DA2] Responding to Secondary Device Attributes query');
-      sendResponse('\x1b[>1;10;0c');
+      sendResponse('\x1b[>1;500;0c');
       return true;
     });
 
@@ -299,7 +303,27 @@ export function TerminalTile({
     // DECRQSS - Request Status String (DCS $ q Pt ST)
     term.parser.registerDcsHandler({ intermediates: '$', final: 'q' }, (data, params) => {
       console.log(`[DECRQSS] Status string query: ${data}`);
-      // Report as invalid request for most queries
+
+      // Handle specific queries
+      if (data === 'm') {
+        // SGR query - report current attributes (normal text)
+        // This indicates true color support via SGR 38;2;r;g;b
+        console.log('[DECRQSS] SGR query - reporting true color support');
+        sendResponse('\x1bP1$rm\x1b\\');
+        return true;
+      } else if (data === '"p') {
+        // DECSCL - Conformance level (VT220, 8-bit controls)
+        console.log('[DECRQSS] DECSCL query');
+        sendResponse('\x1bP1$r62;1"p\x1b\\');
+        return true;
+      } else if (data === 'r') {
+        // DECSTBM - Scrolling region
+        console.log('[DECRQSS] DECSTBM query');
+        sendResponse(`\x1bP1$r1;${term.rows}r\x1b\\`);
+        return true;
+      }
+
+      // Report as invalid request for other queries
       sendResponse('\x1bP0$r\x1b\\');
       return true;
     });
@@ -307,8 +331,37 @@ export function TerminalTile({
     // XTGETTCAP - Termcap/terminfo query (DCS + q <hex> ST)
     term.parser.registerDcsHandler({ intermediates: '+', final: 'q' }, (data, params) => {
       console.log(`[XTGETTCAP] Termcap query: ${data}`);
-      // Report as not available (DCS 0 $ r ST)
-      sendResponse('\x1bP0$r\x1b\\');
+
+      // Decode hex-encoded capability names
+      try {
+        const hexPairs = data.match(/.{2}/g) || [];
+        const capName = hexPairs.map(h => String.fromCharCode(parseInt(h, 16))).join('');
+        console.log(`[XTGETTCAP] Decoded capability: ${capName}`);
+
+        // Respond to important capabilities
+        const capabilities: Record<string, string> = {
+          'TN': 'xterm-256color', // Terminal name
+          'Co': '256', // Colors
+          'RGB': '', // RGB/truecolor support (empty value = supported)
+          'Tc': '', // Truecolor (tmux convention)
+          'colors': '256',
+          'setrgbf': '\x1b[38;2;%p1%d;%p2%d;%p3%dm', // Set RGB foreground
+          'setrgbb': '\x1b[48;2;%p1%d;%p2%d;%p3%dm', // Set RGB background
+        };
+
+        if (capName in capabilities) {
+          const value = capabilities[capName];
+          const hexValue = value.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+          console.log(`[XTGETTCAP] Responding with value: ${value}`);
+          sendResponse(`\x1bP1+r${hexValue}\x1b\\`);
+          return true;
+        }
+      } catch (e) {
+        console.error('[XTGETTCAP] Failed to decode:', e);
+      }
+
+      // Report as not available for unknown capabilities
+      sendResponse('\x1bP0+r\x1b\\');
       return true;
     });
 
