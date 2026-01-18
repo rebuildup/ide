@@ -13,8 +13,6 @@ import {
 interface TerminalTileProps {
   session: TerminalSession;
   wsUrl: string;
-  isActive: boolean;
-  onFocus: () => void;
   onDelete: () => void;
 }
 
@@ -26,8 +24,6 @@ const RESIZE_MESSAGE_PREFIX = '\u0000resize:';
 export function TerminalTile({
   session,
   wsUrl,
-  isActive,
-  onFocus,
   onDelete
 }: TerminalTileProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -100,26 +96,13 @@ export function TerminalTile({
   }, [session.id, session.title, wsUrl]);
 
   return (
-    <div
-      className={`terminal-tile ${isActive ? 'is-active' : ''}`}
-      onClick={onFocus}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') {
-          onFocus();
-        }
-      }}
-    >
+    <div className="terminal-tile">
       <div className="terminal-tile-header">
         <span>{session.title}</span>
         <button
           type="button"
           className="terminal-close-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
+          onClick={onDelete}
           aria-label="ターミナルを閉じる"
         >
           ×

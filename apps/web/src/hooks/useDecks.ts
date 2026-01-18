@@ -38,7 +38,7 @@ export const useDecks = ({
       .catch((error: unknown) => {
         if (!alive) return;
         setStatusMessage(
-          `\u30c7\u30c3\u30ad\u3092\u53d6\u5f97\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f: ${getErrorMessage(error)}`
+          `デッキを取得できませんでした: ${getErrorMessage(error)}`
         );
       });
 
@@ -60,19 +60,11 @@ export const useDecks = ({
     if (current?.terminalsLoaded) return;
     listTerminals(activeDeckId)
       .then((sessions) => {
-        updateDeckState(activeDeckId, (state) => {
-          const nextActive =
-            state.activeTerminalId &&
-            sessions.some((item) => item.id === state.activeTerminalId)
-              ? state.activeTerminalId
-              : sessions[0]?.id ?? null;
-          return {
-            ...state,
-            terminals: sessions,
-            activeTerminalId: nextActive,
-            terminalsLoaded: true
-          };
-        });
+        updateDeckState(activeDeckId, (state) => ({
+          ...state,
+          terminals: sessions,
+          terminalsLoaded: true
+        }));
       })
       .catch((error: unknown) => {
         updateDeckState(activeDeckId, (state) => ({
@@ -80,7 +72,7 @@ export const useDecks = ({
           terminalsLoaded: true
         }));
         setStatusMessage(
-          `\u30bf\u30fc\u30df\u30ca\u30eb\u3092\u53d6\u5f97\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f: ${getErrorMessage(error)}`
+          `ターミナルを取得できませんでした: ${getErrorMessage(error)}`
         );
       });
   }, [activeDeckId, deckStates, updateDeckState, setStatusMessage]);
@@ -98,7 +90,7 @@ export const useDecks = ({
         return deck;
       } catch (error: unknown) {
         setStatusMessage(
-          `\u30c7\u30c3\u30ad\u306e\u4f5c\u6210\u306b\u5931\u6557\u3057\u307e\u3057\u305f: ${getErrorMessage(error)}`
+          `デッキの作成に失敗しました: ${getErrorMessage(error)}`
         );
         return null;
       }
@@ -110,7 +102,7 @@ export const useDecks = ({
     async (deckId: string, terminalsCount: number) => {
       try {
         const index = terminalsCount + 1;
-        const title = `\u30bf\u30fc\u30df\u30ca\u30eb ${index}`;
+        const title = `ターミナル ${index}`;
         const session = await apiCreateTerminal(deckId, title);
         updateDeckState(deckId, (state) => {
           const terminal = {
@@ -120,48 +112,29 @@ export const useDecks = ({
           return {
             ...state,
             terminals: [...state.terminals, terminal],
-            activeTerminalId: terminal.id,
             terminalsLoaded: true
           };
         });
       } catch (error: unknown) {
         setStatusMessage(
-          `\u30bf\u30fc\u30df\u30ca\u30eb\u3092\u8d77\u52d5\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f: ${getErrorMessage(error)}`
+          `ターミナルを起動できませんでした: ${getErrorMessage(error)}`
         );
       }
     },
     [updateDeckState, setStatusMessage]
   );
 
-  const handleSelectTerminal = useCallback(
-    (deckId: string, terminalId: string) => {
-      updateDeckState(deckId, (state) => ({
-        ...state,
-        activeTerminalId: terminalId
-      }));
-    },
-    [updateDeckState]
-  );
-
   const handleDeleteTerminal = useCallback(
     async (deckId: string, terminalId: string) => {
       try {
         await apiDeleteTerminal(terminalId);
-        updateDeckState(deckId, (state) => {
-          const newTerminals = state.terminals.filter((t) => t.id !== terminalId);
-          const newActiveId =
-            state.activeTerminalId === terminalId
-              ? newTerminals[0]?.id ?? null
-              : state.activeTerminalId;
-          return {
-            ...state,
-            terminals: newTerminals,
-            activeTerminalId: newActiveId
-          };
-        });
+        updateDeckState(deckId, (state) => ({
+          ...state,
+          terminals: state.terminals.filter((t) => t.id !== terminalId)
+        }));
       } catch (error: unknown) {
         setStatusMessage(
-          `\u30bf\u30fc\u30df\u30ca\u30eb\u3092\u524a\u9664\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f: ${getErrorMessage(error)}`
+          `ターミナルを削除できませんでした: ${getErrorMessage(error)}`
         );
       }
     },
@@ -174,7 +147,6 @@ export const useDecks = ({
     setActiveDeckId,
     handleCreateDeck,
     handleCreateTerminal,
-    handleSelectTerminal,
     handleDeleteTerminal
   };
 };

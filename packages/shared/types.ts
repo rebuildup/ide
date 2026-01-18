@@ -62,7 +62,6 @@ export interface WorkspaceState {
 
 export interface DeckState {
   terminals: TerminalSession[];
-  activeTerminalId: string | null;
   terminalsLoaded: boolean;
 }
 

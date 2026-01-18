@@ -58,7 +58,7 @@ export default function App() {
       setWorkspaceStates
     });
 
-  const { decks, activeDeckId, setActiveDeckId, handleCreateDeck, handleCreateTerminal, handleSelectTerminal, handleDeleteTerminal } =
+  const { decks, activeDeckId, setActiveDeckId, handleCreateDeck, handleCreateTerminal, handleDeleteTerminal } =
     useDecks({
       setStatusMessage,
       initializeDeckStates,
@@ -246,14 +246,6 @@ export default function App() {
     }
     handleCreateTerminal(activeDeckId, activeDeckState.terminals.length);
   }, [activeDeckId, activeDeckState.terminals.length, handleCreateTerminal]);
-
-  const handleTerminalSelect = useCallback(
-    (terminalId: string) => {
-      if (!activeDeckId) return;
-      handleSelectTerminal(activeDeckId, terminalId);
-    },
-    [activeDeckId, handleSelectTerminal]
-  );
 
   const handleTerminalDelete = useCallback(
     (terminalId: string) => {
@@ -444,9 +436,7 @@ export default function App() {
         {activeDeckId ? (
           <TerminalPane
             terminals={activeDeckState.terminals}
-            activeTerminalId={activeDeckState.activeTerminalId}
             wsBase={wsBase}
-            onSelectTerminal={handleTerminalSelect}
             onNewTerminal={handleNewTerminal}
             onDeleteTerminal={handleTerminalDelete}
           />

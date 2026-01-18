@@ -23,7 +23,6 @@ export function createEmptyWorkspaceState(): WorkspaceState {
 export function createEmptyDeckState(): DeckState {
   return {
     terminals: [],
-    activeTerminalId: null,
     terminalsLoaded: false
   };
 }

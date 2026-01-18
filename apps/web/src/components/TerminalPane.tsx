@@ -3,23 +3,19 @@ import { TerminalTile } from './TerminalTile';
 
 interface TerminalPaneProps {
   terminals: TerminalSession[];
-  activeTerminalId: string | null;
   wsBase: string;
-  onSelectTerminal: (terminalId: string) => void;
   onNewTerminal: () => void;
   onDeleteTerminal: (terminalId: string) => void;
 }
 
-const LABEL_TERMINAL = '\u30bf\u30fc\u30df\u30ca\u30eb';
-const LABEL_MULTI = '\u30c7\u30c3\u30ad\u3054\u3068\u306b\u8907\u6570\u8d77\u52d5';
-const LABEL_ADD = '\u30bf\u30fc\u30df\u30ca\u30eb\u8ffd\u52a0';
-const LABEL_EMPTY = '\u30bf\u30fc\u30df\u30ca\u30eb\u3092\u8ffd\u52a0\u3057\u3066\u304f\u3060\u3055\u3044\u3002';
+const LABEL_TERMINAL = 'ターミナル';
+const LABEL_MULTI = 'デッキごとに複数起動';
+const LABEL_ADD = 'ターミナル追加';
+const LABEL_EMPTY = 'ターミナルを追加してください。';
 
 export function TerminalPane({
   terminals,
-  activeTerminalId,
   wsBase,
-  onSelectTerminal,
   onNewTerminal,
   onDeleteTerminal
 }: TerminalPaneProps) {
@@ -45,8 +41,6 @@ export function TerminalPane({
               key={terminal.id}
               session={terminal}
               wsUrl={`${wsBase}/api/terminals/${terminal.id}`}
-              isActive={terminal.id === activeTerminalId}
-              onFocus={() => onSelectTerminal(terminal.id)}
               onDelete={() => onDeleteTerminal(terminal.id)}
             />
           ))}
