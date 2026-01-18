@@ -31,10 +31,12 @@
       "package.json",
       "src/**/*",
       "server/**/*",
-      "web/dist/**/*"
+      "web/dist/**/*",
+      "packages/**/*"
     ],
     "asarUnpack": [
-      "**/node-pty/**"
+      "**/node-pty/**",
+      "packages/**/*"
     ],
     "win": {
       "target": "nsis"

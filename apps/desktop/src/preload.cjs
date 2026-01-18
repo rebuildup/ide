@@ -8,6 +8,9 @@ contextBridge.exposeInMainWorld('api', {
   openUi: () => ipcRenderer.invoke('server-open'),
   setAutoStart: (enabled) => ipcRenderer.invoke('autostart-set', enabled),
   clearLogs: () => ipcRenderer.invoke('logs-clear'),
+  getConfig: () => ipcRenderer.invoke('config-get'),
+  saveConfig: (config) => ipcRenderer.invoke('config-save', config),
+  killPort: (port) => ipcRenderer.invoke('port-kill', port),
   onStatus: (callback) => {
     ipcRenderer.on('server-status', (_, status) => callback(status));
   },

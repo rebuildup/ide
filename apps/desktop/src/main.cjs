@@ -9,7 +9,12 @@ const path = require('path');
 const serverManager = require('./server-manager.cjs');
 const logManager = require('./log-manager.cjs');
 const windowManager = require('./window-manager.cjs');
-const { setAutoStartEnabled } = require('./config-manager.cjs');
+const {
+  setAutoStartEnabled,
+  loadConfig,
+  saveConfig,
+  killProcessOnPort
+} = require('./config-manager.cjs');
 
 /**
  * アプリケーション起動時の初期化
@@ -82,4 +87,27 @@ ipcMain.handle('server-open', () => {
 ipcMain.handle('autostart-set', (_, enabled) => {
   setAutoStartEnabled(enabled);
   return serverManager.getStatus();
+});
+
+// 設定を取得
+ipcMain.handle('config-get', () => {
+  return loadConfig();
+});
+
+// 設定を保存してサーバーを再起動
+ipcMain.handle('config-save', (_, config) => {
+  const success = saveConfig(config);
+  if (success) {
+    // サーバーを再起動して新しい設定を反映
+    serverManager.stop();
+    setTimeout(() => {
+      serverManager.start();
+    }, 500);
+  }
+  return { success, status: serverManager.getStatus() };
+});
+
+// ポートを使用しているプロセスをkill
+ipcMain.handle('port-kill', async (_, port) => {
+  return await killProcessOnPort(port);
 });
