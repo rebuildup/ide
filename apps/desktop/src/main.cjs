@@ -37,13 +37,20 @@ app.whenReady().then(() => {
 });
 
 /**
+ * アプリケーション終了前の処理
+ */
+app.on('before-quit', () => {
+  windowManager.setQuitting(true);
+  serverManager.stop();
+});
+
+/**
  * 全ウィンドウが閉じられた時の処理
+ * トレイに最小化している場合は終了しない
  */
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    serverManager.stop();
-    app.quit();
-  }
+  // macOS以外では、トレイからQuitを選択した場合のみ終了
+  // ウィンドウを閉じただけの場合はトレイに残る
 });
 
 /**

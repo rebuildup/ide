@@ -34,7 +34,7 @@ const loadConfig = async () => {
   basicAuthEnabledInput.checked = config.basicAuth.enabled;
   basicAuthUsernameInput.value = config.basicAuth.username;
   basicAuthPasswordInput.value = config.basicAuth.password;
-  basicAuthFieldsEl.style.display = config.basicAuth.enabled ? 'block' : 'none';
+  basicAuthFieldsEl.classList.toggle('visible', config.basicAuth.enabled);
 };
 
 const refresh = async () => {
@@ -100,7 +100,7 @@ killPortBtn.addEventListener('click', async () => {
 });
 
 basicAuthEnabledInput.addEventListener('change', (event) => {
-  basicAuthFieldsEl.style.display = event.target.checked ? 'block' : 'none';
+  basicAuthFieldsEl.classList.toggle('visible', event.target.checked);
 });
 
 saveConfigBtn.addEventListener('click', async () => {
