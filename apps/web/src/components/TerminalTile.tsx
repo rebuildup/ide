@@ -546,14 +546,6 @@ export function TerminalTile({
     <div className="terminal-tile">
       <div className="terminal-tile-header">
         <span>{session.title}</span>
-        <button
-          type="button"
-          className="terminal-close-btn"
-          onClick={onDelete}
-          aria-label="ターミナルを閉じる"
-        >
-          ×
-        </button>
       </div>
       <div className="terminal-tile-body" ref={containerRef} />
     </div>

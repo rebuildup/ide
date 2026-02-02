@@ -11,6 +11,7 @@ import { StatusMessage } from './components/StatusMessage';
 import { TerminalPane } from './components/TerminalPane';
 import { WorkspaceList } from './components/WorkspaceList';
 import { WorkspaceModal } from './components/WorkspaceModal';
+import { GlobalStatusBar } from './components/GlobalStatusBar';
 import { getConfig, getWsBase } from './api';
 import { useWorkspaceState } from './hooks/useWorkspaceState';
 import { useDeckState } from './hooks/useDeckState';
@@ -125,6 +126,18 @@ export default function App() {
     name: deck.name,
     path: workspaceById.get(deck.workspaceId)?.path || deck.root
   }));
+
+  // Calculate active terminals count for status bar
+  const activeTerminalsCount = useMemo(() => {
+    let count = 0;
+    activeDeckIds.forEach((deckId) => {
+      const deckState = deckStates[deckId];
+      if (deckState?.terminals) {
+        count += deckState.terminals.length;
+      }
+    });
+    return count;
+  }, [activeDeckIds, deckStates]);
 
   useEffect(() => {
     let alive = true;
@@ -563,6 +576,7 @@ export default function App() {
         </div>
       </main>
       <StatusMessage message={statusMessage} />
+      <GlobalStatusBar activeTerminalsCount={activeTerminalsCount} />
       <WorkspaceModal
         isOpen={isWorkspaceModalOpen}
         defaultRoot={defaultRoot}
