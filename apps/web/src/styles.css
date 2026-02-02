@@ -67,7 +67,7 @@ textarea {
 }
 
 /* ========================================
-   App Layout (VS Code Structure)
+   App Layout (Unified Layout)
    ======================================== */
 
 .app {
@@ -75,6 +75,22 @@ textarea {
   grid-template-columns: 48px minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) 22px;
   min-height: 100vh;
+}
+
+/* Unified Layout */
+.unified-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.unified-terminal-section {
+  flex: 1;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid transparent;
 }
 
 /* ========================================

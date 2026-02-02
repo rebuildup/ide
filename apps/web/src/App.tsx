@@ -33,7 +33,6 @@ import { createEmptyWorkspaceState, createEmptyDeckState } from './utils/stateUt
 
 export default function App() {
   const initialUrlState = parseUrlState();
-  const [view, setView] = useState<AppView>(initialUrlState.view);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>(
     initialUrlState.workspaceMode
   );
@@ -155,7 +154,6 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const next = parseUrlState();
-      setView(next.view);
       setEditorWorkspaceId(next.workspaceId ?? null);
       setActiveDeckIds(next.deckIds);
       setWorkspaceMode(next.workspaceMode);
@@ -166,22 +164,18 @@ export default function App() {
 
   useEffect(() => {
     const params = new URLSearchParams();
-    params.set('view', view);
-    if (view === 'workspace' && editorWorkspaceId) {
+    if (editorWorkspaceId) {
       params.set('workspace', editorWorkspaceId);
     }
     if (activeDeckIds.length > 0) {
       params.set('decks', activeDeckIds.join(','));
-    }
-    if (view === 'workspace' && workspaceMode === 'editor' && editorWorkspaceId) {
-      params.set('mode', 'editor');
     }
     const query = params.toString();
     const nextUrl = query
       ? `${window.location.pathname}?${query}`
       : window.location.pathname;
     window.history.replaceState(null, '', nextUrl);
-  }, [view, editorWorkspaceId, activeDeckIds, workspaceMode]);
+  }, [editorWorkspaceId, activeDeckIds]);
 
   useEffect(() => {
     if (statusMessage !== MESSAGE_SAVED) return;
@@ -332,11 +326,9 @@ export default function App() {
   }, [setActiveDeckIds]);
 
 
-  const isWorkspaceEditorOpen = workspaceMode === 'editor' && Boolean(editorWorkspaceId);
-
   const gitChangeCount = gitState.status?.files.length ?? 0;
 
-  const workspaceEditor = isWorkspaceEditorOpen ? (
+  const workspaceEditor = workspaceMode === 'editor' && Boolean(editorWorkspaceId) ? (
     <div className="workspace-editor-overlay">
       <div className="workspace-editor-header">
         <button
@@ -475,8 +467,9 @@ export default function App() {
     </div>
   );
 
-  const terminalView = (
-    <div className="terminal-layout">
+  // Unified terminal section (always shown below editor)
+  const terminalSection = (
+    <div className="unified-terminal-section">
       <div className="terminal-topbar">
         <div className="topbar-left">
           <div className="deck-tabs">
@@ -557,15 +550,17 @@ export default function App() {
   );
 
   return (
-    <div className="app" data-view={view}>
+    <div className="app">
       <SideNav
-        activeView={view}
-        onSelect={setView}
+        activeView={workspaceMode === 'editor' ? 'workspace' : 'workspace'}
+        onSelect={() => {}}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
       />
       <main className="main">
-        {view === 'workspace' && workspaceView}
-        {view === 'terminal' && terminalView}
+        <div className="unified-layout">
+          {workspaceView}
+          {terminalSection}
+        </div>
       </main>
       <StatusMessage message={statusMessage} />
       <WorkspaceModal
