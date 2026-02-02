@@ -475,20 +475,24 @@ export default function App() {
 
   const workspaceView = (
     <div className="workspace-view">
-      <div className="workspace-start">
-        <button
-          type="button"
-          className="primary-button"
-          onClick={handleOpenWorkspaceModal}
-        >
-          {'\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9\u8ffd\u52a0'}
-        </button>
-        <WorkspaceList
-          workspaces={workspaces}
-          selectedWorkspaceId={editorWorkspaceId}
-          onSelect={handleSelectWorkspace}
-        />
-      </div>
+      {workspaceMode === 'list' ? (
+        <>
+          <div className="workspace-start">
+            <button
+              type="button"
+              className="primary-button"
+              onClick={handleOpenWorkspaceModal}
+            >
+              {'\u30ef\u30fc\u30af\u30b9\u30da\u30fc\u30b9\u8ffd\u52a0'}
+            </button>
+            <WorkspaceList
+              workspaces={workspaces}
+              selectedWorkspaceId={editorWorkspaceId}
+              onSelect={handleSelectWorkspace}
+            />
+          </div>
+        </>
+      ) : null}
       {workspaceEditor}
     </div>
   );

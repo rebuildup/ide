@@ -86,11 +86,11 @@ textarea {
 }
 
 .unified-terminal-section {
-  flex: 1;
+  flex: 0 0 45%;
   min-height: 200px;
   display: flex;
   flex-direction: column;
-  border-top: 1px solid transparent;
+  border-top: 1px solid var(--border-dim);
 }
 
 /* ========================================
@@ -394,12 +394,11 @@ textarea {
    ======================================== */
 
 .workspace-editor-overlay {
-  position: fixed;
-  inset: 0;
+  flex: 1;
+  min-height: 0;
   background: var(--bg);
   display: grid;
   grid-template-rows: 35px minmax(0, 1fr);
-  z-index: 30;
 }
 
 .workspace-editor-header {
