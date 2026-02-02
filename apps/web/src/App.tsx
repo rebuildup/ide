@@ -58,15 +58,25 @@ export default function App() {
       setWorkspaceStates
     });
 
-  const { decks, activeDeckIds, setActiveDeckIds, handleCreateDeck, handleCreateTerminal, handleDeleteTerminal } =
-    useDecks({
-      setStatusMessage,
-      initializeDeckStates,
-      updateDeckState,
-      deckStates,
-      setDeckStates,
-      initialDeckIds: initialUrlState.deckIds
-    });
+  const {
+    decks,
+    activeDeckIds,
+    setActiveDeckIds,
+    terminalGroups,
+    handleCreateDeck,
+    handleCreateTerminal,
+    handleDeleteTerminal,
+    handleToggleGroupCollapsed,
+    handleDeleteGroup,
+    handleUpdateGroup
+  } = useDecks({
+    setStatusMessage,
+    initializeDeckStates,
+    updateDeckState,
+    deckStates,
+    setDeckStates,
+    initialDeckIds: initialUrlState.deckIds
+  });
 
 
   const defaultWorkspaceState = useMemo(() => createEmptyWorkspaceState(), []);
@@ -562,6 +572,17 @@ export default function App() {
                   terminals={deckState.terminals}
                   wsBase={wsBase}
                   onDeleteTerminal={(terminalId) => handleTerminalDeleteForDeck(deckId, terminalId)}
+                  terminalGroups={terminalGroups}
+                  onToggleGroupCollapsed={handleToggleGroupCollapsed}
+                  onDeleteGroup={handleDeleteGroup}
+                  onRenameGroup={(groupId) => {
+                    // TODO: Implement rename dialog
+                    const newName = prompt('Enter new group name:');
+                    if (newName) {
+                      handleUpdateGroup(groupId, { name: newName });
+                    }
+                  }}
+                  onCreateTerminal={() => handleNewTerminalForDeck(deckId)}
                 />
               </div>
             );

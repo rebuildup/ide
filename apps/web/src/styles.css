@@ -1945,7 +1945,39 @@ textarea {
   font-size: 12px;
   background: #2d2d2d;
   border-bottom: 1px solid #404040;
+  border-left: 3px solid transparent;
   gap: 8px;
+}
+
+.terminal-tile-header-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.terminal-color-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.terminal-tile-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.terminal-tile-tags {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .terminal-tile-header span {
@@ -1979,6 +2011,115 @@ textarea {
 .terminal-tile-body {
   flex: 1;
   min-height: 0;
+}
+
+/* Terminal Container for sections */
+.terminal-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.terminal-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.terminal-group-section {
+  border-top: 2px solid;
+  padding-top: 8px;
+}
+
+/* Terminal Group Header */
+.terminal-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  gap: 8px;
+  background: var(--bg-soft);
+  border-radius: 3px;
+}
+
+.terminal-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.1s;
+}
+
+.terminal-group-toggle:hover {
+  background: var(--list-hover);
+}
+
+.terminal-group-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-group-count {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.terminal-group-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.terminal-group-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.terminal-group-action-btn:hover {
+  background: var(--list-hover);
+  color: var(--ink);
+}
+
+.terminal-group-action-btn.terminal-group-delete:hover {
+  background: #3a1d1d;
+  color: #f87171;
+}
+
+/* Terminal Tag */
+.terminal-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border: 1px solid;
+  border-radius: 3px;
+  font-size: 10px;
+  color: var(--ink-dim);
+  background: transparent;
+}
+
+.terminal-tag svg {
+  flex-shrink: 0;
 }
 
 /* Deck Drawer */

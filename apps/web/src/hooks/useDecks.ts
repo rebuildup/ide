@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Deck } from '../types';
+import type { Deck, TerminalGroup, TerminalSession } from '../types';
 import {
   listDecks,
   createDeck as apiCreateDeck,
@@ -28,6 +28,7 @@ export const useDecks = ({
 }: UseDecksProps) => {
   const [decks, setDecks] = useState<Deck[]>([]);
   const [activeDeckIds, setActiveDeckIds] = useState<string[]>(initialDeckIds ?? []);
+  const [terminalGroups, setTerminalGroups] = useState<TerminalGroup[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -157,12 +158,111 @@ export const useDecks = ({
     [updateDeckState, setStatusMessage]
   );
 
+  // Terminal group management functions
+  const handleCreateGroup = useCallback(
+    (name: string, color: string) => {
+      const newGroup: TerminalGroup = {
+        id: `group-${Date.now()}`,
+        name,
+        color,
+        terminalIds: [],
+        collapsed: false
+      };
+      setTerminalGroups((prev) => [...prev, newGroup]);
+    },
+    []
+  );
+
+  const handleDeleteGroup = useCallback(
+    (groupId: string) => {
+      setTerminalGroups((prev) => prev.filter((g) => g.id !== groupId));
+      // Ungroup terminals when group is deleted
+      setDeckStates((prev) => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach((deckId) => {
+          updated[deckId] = {
+            ...updated[deckId],
+            terminals: updated[deckId].terminals.map((t) =>
+              t.groupId === groupId ? { ...t, groupId: undefined } : t
+            )
+          };
+        });
+        return updated;
+      });
+    },
+    [setDeckStates]
+  );
+
+  const handleUpdateGroup = useCallback(
+    (groupId: string, updates: Partial<Omit<TerminalGroup, 'id'>>) => {
+      setTerminalGroups((prev) =>
+        prev.map((g) => (g.id === groupId ? { ...g, ...updates } : g))
+      );
+    },
+    []
+  );
+
+  const handleToggleGroupCollapsed = useCallback(
+    (groupId: string) => {
+      setTerminalGroups((prev) =>
+        prev.map((g) =>
+          g.id === groupId ? { ...g, collapsed: !g.collapsed } : g
+        )
+      );
+    },
+    []
+  );
+
+  const handleAssignTerminalToGroup = useCallback(
+    (deckId: string, terminalId: string, groupId: string | undefined) => {
+      updateDeckState(deckId, (state) => ({
+        ...state,
+        terminals: state.terminals.map((t) =>
+          t.id === terminalId ? { ...t, groupId } : t
+        )
+      }));
+    },
+    [updateDeckState]
+  );
+
+  const handleUpdateTerminalColor = useCallback(
+    (deckId: string, terminalId: string, color: string | undefined) => {
+      updateDeckState(deckId, (state) => ({
+        ...state,
+        terminals: state.terminals.map((t) =>
+          t.id === terminalId ? { ...t, color } : t
+        )
+      }));
+    },
+    [updateDeckState]
+  );
+
+  const handleUpdateTerminalTags = useCallback(
+    (deckId: string, terminalId: string, tags: string[]) => {
+      updateDeckState(deckId, (state) => ({
+        ...state,
+        terminals: state.terminals.map((t) =>
+          t.id === terminalId ? { ...t, tags } : t
+        )
+      }));
+    },
+    [updateDeckState]
+  );
+
   return {
     decks,
     activeDeckIds,
     setActiveDeckIds,
+    terminalGroups,
     handleCreateDeck,
     handleCreateTerminal,
-    handleDeleteTerminal
+    handleDeleteTerminal,
+    handleCreateGroup,
+    handleDeleteGroup,
+    handleUpdateGroup,
+    handleToggleGroupCollapsed,
+    handleAssignTerminalToGroup,
+    handleUpdateTerminalColor,
+    handleUpdateTerminalTags
   };
 };

@@ -48,6 +48,22 @@ export interface TerminalSession {
   id: string;
   title: string;
   createdAt?: string;
+  // Terminal organization properties
+  groupId?: string;
+  color?: string;
+  tags?: string[];
+  parentId?: string; // For hierarchical grouping
+  shell?: string;
+  type?: 'default' | 'claude' | 'codex';
+}
+
+// Terminal group for organizing terminals
+export interface TerminalGroup {
+  id: string;
+  name: string;
+  color: string;
+  terminalIds: string[];
+  collapsed?: boolean;
 }
 
 // UI State types

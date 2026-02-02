@@ -7,6 +7,7 @@ export type {
   FileTreeNode,
   EditorFile,
   TerminalSession,
+  TerminalGroup,
   WorkspaceState,
   DeckState,
   ApiError,

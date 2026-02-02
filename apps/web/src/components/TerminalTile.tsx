@@ -7,6 +7,7 @@ import { WebglAddon } from 'xterm-addon-webgl';
 import 'xterm/css/xterm.css';
 import type { TerminalSession } from '../types';
 import { getWsToken } from '../api';
+import { TerminalTag } from './TerminalGroupHeader';
 import {
   TERMINAL_FONT_FAMILY,
   TERMINAL_FONT_SIZE,
@@ -544,8 +545,26 @@ export function TerminalTile({
 
   return (
     <div className="terminal-tile">
-      <div className="terminal-tile-header">
-        <span>{session.title}</span>
+      <div
+        className="terminal-tile-header"
+        style={{ borderLeftColor: session.color || undefined }}
+      >
+        <div className="terminal-tile-header-content">
+          {session.color && (
+            <span
+              className="terminal-color-indicator"
+              style={{ backgroundColor: session.color }}
+            />
+          )}
+          <span className="terminal-tile-title">{session.title}</span>
+          {session.tags && session.tags.length > 0 && (
+            <div className="terminal-tile-tags">
+              {session.tags.map((tag) => (
+                <TerminalTag key={tag} tag={tag} color={session.color} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       <div className="terminal-tile-body" ref={containerRef} />
     </div>
