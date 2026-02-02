@@ -3,8 +3,13 @@
  */
 
 export { SessionMonitor } from './session-monitor';
-export { SessionAnalyzer } from './analyzer';
-export { ContextController } from './controller';
+export { SessionAnalyzer } from './session-analyzer';
+export { ContextController } from './context-controller';
+
+// Also export SessionCompactor and SnapshotManager
+export { SessionCompactor } from './session-compactor';
+export { SnapshotManager } from './snapshot-manager';
+export { OutputTrimmer } from './output-trimmer';
 
 // Re-export types from analyzer
 export type {
