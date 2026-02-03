@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+  <!-- Background -->
+  <rect width="64" height="64" rx="12" fill="#007ACC"/>
+
+  <!-- Cursor shape -->
+  <path d="M26 18 L38 30 L34 32 L40 46 L28 38 L26 42 Z" fill="white" stroke="white" stroke-width="1" stroke-linejoin="round"/>
+
+  <!-- Cursor outline -->
+  <path d="M26 18 L38 30 L34 32 L40 46 L28 38 L26 42 Z" fill="none" stroke="#007ACC" stroke-width="1.5"/>
+</svg>

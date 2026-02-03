@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+  <!-- Background -->
+  <rect width="64" height="64" rx="12" fill="#D97706"/>
+
+  <!-- Bot Icon -->
+  <circle cx="32" cy="28" r="14" fill="white"/>
+
+  <!-- Eyes -->
+  <circle cx="27" cy="26" r="2.5" fill="#D97706"/>
+  <circle cx="37" cy="26" r="2.5" fill="#D97706"/>
+
+  <!-- Antenna -->
+  <line x1="32" y1="14" x2="32" y2="8" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="32" cy="6" r="2" fill="white"/>
+
+  <!-- Body -->
+  <path d="M20 42 Q32 46 44 42" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Arms -->
+  <line x1="18" y1="36" x2="12" y2="32" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="46" y1="36" x2="52" y2="32" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
