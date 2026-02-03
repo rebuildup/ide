@@ -10,9 +10,9 @@ export default defineConfig({
       // Disable icon requirement for development
       includeAssets: [],
       manifest: {
-        name: 'Deck IDE',
-        short_name: 'DeckIDE',
-        description: 'A modern IDE for development',
+        name: 'S-IDE Studio IDE',
+        short_name: 'S-IDE',
+        description: 'A modern IDE for AI agent workflows',
         theme_color: '#2563eb',
         // Icons will be added later
         icons: []
@@ -20,14 +20,14 @@ export default defineConfig({
     })
   ],
   server: {
-    port: 3000,
+    port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8787',
         changeOrigin: true
       },
       '/ws': {
-        target: 'ws://localhost:8080',
+        target: 'ws://localhost:8787',
         ws: true
       }
     }

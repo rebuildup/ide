@@ -1,18 +1,18 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Deck IDE",
+  "productName": "S-IDE",
   "version": "2.0.0",
-  "identifier": "com.deck.ide",
+  "identifier": "com.side.ide",
   "build": {
     "beforeDevCommand": "npm run dev:web",
     "beforeBuildCommand": "npm run build:web",
     "frontendDist": "../../web/dist",
-    "devUrl": "http://localhost:3000"
+    "devUrl": "http://localhost:5173"
   },
   "app": {
     "windows": [
       {
-        "title": "Deck IDE",
+        "title": "S-IDE Studio IDE",
         "width": 1400,
         "height": 900,
         "minWidth": 800,
