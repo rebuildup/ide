@@ -1,192 +1,483 @@
 # Deck IDE
 
-複数のターミナルを並列で管理できる軽量なWeb IDE。AIエージェント（Claude Code、Codex CLI等）を永続的に動かすことに最適化されています。
+> An intelligent development environment optimized for AI agent workflows with multi-terminal support, Monaco Editor integration, and built-in Git operations.
 
-## 特徴
+Deck IDE is designed to maximize AI agent productivity by providing a clean, focused interface with powerful context management capabilities to combat "context rot" in long coding sessions.
 
-- **マルチターミナル** - 複数のターミナルを同時に起動・管理
-- **Monaco Editor** - VS Codeと同じエディタエンジンによるコード編集
-- **Git統合** - ステージング、コミット、プッシュ、プル、ブランチ管理
-- **マルチリポジトリ対応** - ワークスペース内の複数Gitリポジトリを自動検出
-- **ファイルエクスプローラー** - ファイル・フォルダの作成、削除、名前変更
-- **Diffビューア** - 変更ファイルの差分表示
-- **Windowsデスクトップアプリ** - Electronベースのネイティブアプリ（自動アップデート対応）
+---
 
-## スクリーンショット
+## Features
+
+### Core Capabilities
+- **Multi-Workspace Management** - Add and switch between multiple project directories
+- **Deck System** - Create named workspaces (decks) with fixed root paths for organized project management
+- **Monaco Editor** - VS Code's powerful editor with syntax highlighting, IntelliSense, and rich editing features
+- **Multi-Terminal Support** - Run multiple terminals per deck with drag-reorder capabilities
+- **Integrated Git Operations** - Full Git workflow including status, diff, commit, push, pull, branch management
+- **File Explorer** - Browse, create, edit, and delete files and directories
+- **Split View** - View up to 3 decks simultaneously for multi-project workflows
+- **Cross-Platform** - Works on Windows, macOS, and Linux
+
+### Context Manager Features
+Deck IDE includes an advanced **Context Manager** system specifically designed to optimize AI agent workflows:
+
+- **Health Score Monitoring** - Real-time assessment of conversation context quality (0-100 scale)
+- **Topic Drift Detection** - Identifies when conversations drift from the original topic
+- **Session Compaction** - Reduces context bloat by summarizing older messages
+- **Snapshot System** - Save and restore conversation states at any point
+- **Auto-Compaction** - Automatic context cleanup when thresholds are exceeded
+- **Phase Detection** - Identifies conversation phases (planning, implementation, debugging, etc.)
+- **Smart Recommendations** - Actionable suggestions based on context analysis
+
+---
+
+## Layout Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ [エクスプローラー] [Git] [設定]    Deck IDE                  │
-├─────────┬───────────────────────────────────────────────────┤
-│ ファイル │  Monaco Editor                                    │
-│ ツリー   │                                                   │
-│         │                                                    │
-│         ├───────────────────────────────────────────────────┤
-│         │  Terminal 1        │  Terminal 2                  │
-│         │  $ claude          │  $ codex                     │
-│         │  ...               │  ...                         │
-└─────────┴───────────────────────────────────────────────────┘
++---------------------------------------------------------------+
+|  Side Bar  |  Workspace / Editor Area      |  Terminal Deck  |
+|            |                               |                 |
+|  - Files   |  +-------------------------+  |  +-----------+  |
+|  - Git     |  |   File Explorer /        |  |  | Terminal  |  |
+|  - AI     |  |   Monaco Editor          |  |  | Terminal  |  |
+|            |  |                         |  |  +-----------+  |
+|            |  +-------------------------+  |  +-----------+  |
+|            |                               |  | Terminal  |  |
+|            |                               |  +-----------+  |
++---------------------------------------------------------------+
 ```
 
-## インストール
+---
 
-### Windowsデスクトップアプリ（推奨）
+## Installation
 
-[Releases](https://github.com/tako0614/ide/releases)から最新の`Deck-IDE-Setup-x.x.x.exe`をダウンロードしてインストール。
+### Windows Desktop App (Recommended)
 
-### ソースから実行
+1. Download the latest installer from [Releases](https://github.com/tako0614/ide/releases)
+2. Run `Deck-IDE-Setup-x.x.x.exe`
+3. Launch Deck IDE from the desktop or Start menu
+
+### From Source
 
 ```bash
-# リポジトリをクローン
+# Clone the repository
 git clone https://github.com/tako0614/ide.git
 cd ide
 
-# 依存関係をインストール
+# Install dependencies
 npm install
 
-# 開発モードで起動（Web + Server）
-npm run dev:server   # ターミナル1
-npm run dev:web      # ターミナル2
+# Build the desktop app
+npm run build:desktop
 
-# またはビルドして起動
-npm run serve
+# Or run in development mode
+npm run dev:desktop
 ```
 
-ブラウザで http://localhost:3210 を開く。
+### Web Version
 
-## プロジェクト構成
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+---
+
+## Project Structure
 
 ```
 ide/
 ├── apps/
-│   ├── web/          # フロントエンド (React + Vite)
-│   ├── server/       # バックエンド (Hono + node-pty)
-│   └── desktop/      # Electronアプリ
+│   ├── desktop/          # Electron desktop app
+│   │   ├── src/          # Main process scripts
+│   │   ├── scripts/      # Build scripts
+│   │   └── package.json
+│   ├── server/           # Backend API server
+│   │   ├── src/
+│   │   │   ├── routes/   # API routes
+│   │   │   ├── middleware/# Express middleware
+│   │   │   └── utils/    # Server utilities
+│   │   └── package.json
+│   └── web/              # Frontend React app
+│       ├── src/
+│       │   ├── components/# React components
+│       │   ├── hooks/    # Custom React hooks
+│       │   └── utils/    # Frontend utilities
+│       └── package.json
 ├── packages/
-│   └── shared/       # 共有型定義
-└── docs/             # ドキュメント
+│   └── shared/           # Shared utilities
+├── .claude/              # Claude Context Manager
+│   └── context-manager/  # Context management system
+├── data/                 # SQLite database
+├── docs/                 # Documentation
+├── package.json          # Root package.json
+├── LICENSE               # MIT License
+├── README.md             # This file
+└── SPEC.md               # Project specification
 ```
 
-## 技術スタック
+---
 
-### フロントエンド
-- React 19
-- Vite
-- Monaco Editor
-- xterm.js (WebGL対応)
-- TypeScript
+## Tech Stack
 
-### バックエンド
-- Hono (高速HTTPフレームワーク)
-- node-pty (疑似ターミナル)
-- simple-git (Git操作)
-- WebSocket (ターミナル通信)
-- SQLite (データ永続化)
+### Frontend
+- **React 18** - UI framework
+- **TypeScript** - Type safety
+- **Vite** - Build tool
+- **Monaco Editor** - Code editor (VS Code's editor)
+- **xterm.js** - Terminal emulator
+- **Lucide React** - Icons
 
-### デスクトップ
-- Electron 40
-- electron-builder
-- electron-updater (自動アップデート)
+### Backend
+- **Node.js** - Runtime
+- **Hono** - Web framework
+- **node-pty** - Pseudo-terminal for Windows
+- **simple-git** - Git operations
+- **SQLite (node:sqlite)** - Database
+- **WebSocket (ws)** - Real-time terminal communication
 
-## 使い方
+### Desktop
+- **Electron 40** - Desktop framework
+- **Electron Builder** - Package builder
+- **electron-updater** - Auto-updates
 
-### ワークスペースの追加
+---
 
-1. 左サイドバーの「+」ボタンをクリック
-2. ディレクトリパスを入力（例: `C:\Projects\myapp`）
-3. ワークスペースが追加される
+## Usage Guide
 
-### デッキの作成
+### Adding Workspaces
 
-1. ワークスペースを選択
-2. 「デッキ作成」ボタンをクリック
-3. デッキ名を入力
+1. Click "Workspace" button in the sidebar
+2. Click the "+" button to add a new workspace
+3. Enter the filesystem path (or use the default home directory)
+4. Click "Add Workspace"
 
-### ターミナルの使用
+### Creating Decks
 
-- 「ターミナル追加」: 新しいターミナルを開く
-- 「Claude」: `claude` コマンドを実行するターミナルを開く
-- 「Codex」: `codex` コマンドを実行するターミナルを開く
+1. Click the "+" button in the terminal deck tabs
+2. Enter a name for your deck
+3. Select the workspace to associate with the deck
+4. Click "Create"
 
-### Git操作
+### Using Terminals
 
-1. サイドナビでGitアイコンをクリック
-2. 変更ファイルを確認
-3. 「+」でステージング、「−」でアンステージ
-4. コミットメッセージを入力してコミット
-5. プッシュ/プル/フェッチボタンで同期
+Each deck can have multiple terminals:
 
-## 開発
+- **Add Terminal** - Click the "+" button in deck header
+- **Add Claude Terminal** - Click "C" button for pre-configured Claude Code terminal
+- **Add Codex Terminal** - Click "X" button for Codex terminal
+- **Delete Terminal** - Click the "×" button on terminal tab
+- **Reorder Terminals** - Drag terminal tabs to reorder
+
+### Git Operations
+
+The Source Control panel provides:
+
+- **Status View** - See modified, staged, and untracked files
+- **Multi-Repo Support** - Work with multiple Git repositories in one workspace
+- **Stage/Unstage** - Add or remove files from staging
+- **Commit** - Commit staged changes with a message
+- **Push/Pull** - Sync with remote repositories
+- **Branch Management** - Create, checkout, and list branches
+- **Diff View** - See side-by-side differences
+
+### Context Manager Usage
+
+#### Health Score
+
+The Context Manager displays a health score (0-100) indicating the quality of your conversation context:
+
+- **80-100 (Excellent)** - Context is clean and focused
+- **50-79 (Good)** - Context is healthy but could be optimized
+- **30-49 (Warning)** - Context is degrading, consider compacting
+- **0-29 (Critical)** - Context is severely degraded, action recommended
+
+#### Topic Drift Detection
+
+Topic drift measures how much the conversation has diverged from the original topic:
+
+- **0-39% (Low)** - Conversation is on-topic
+- **40-69% (Medium)** - Some drift detected
+- **70-100% (High)** - Significant drift, consider starting a new session
+
+#### Compact Feature
+
+Reduces context bloat by summarizing older messages:
+
+- Click the "Compact" button in Context Manager panel
+- Keeps recent messages intact (default: last 50)
+- Summarizes older messages into concise summaries
+- Saves token space and improves AI focus
+
+#### Snapshot Feature
+
+Save conversation states for later restoration:
+
+- Click "Snapshot" button to save current state
+- Each snapshot includes commit hash, timestamp, and health score
+- Restore previous snapshots via API
+
+#### Reading the Status Indicator
+
+The compact status bar shows:
+- Health score (colored bar)
+- Drift percentage
+- Quick action buttons (Compact, Snapshot)
+
+---
+
+## Development
+
+### Available Scripts
 
 ```bash
-# 依存関係のインストール
-npm install
+# Development
+npm run dev:web        # Start web dev server
+npm run dev:server     # Start server in dev mode
+npm run dev:desktop    # Start Electron app in dev mode
 
-# 開発サーバー起動
-npm run dev:server   # サーバー (port 3210)
-npm run dev:web      # Web (port 5173)
+# Building
+npm run build:web      # Build web frontend
+npm run build:server   # Build server
+npm run build:desktop  # Build all components for desktop
 
-# ビルド
-npm run build:web    # Webのみ
-npm run build:server # サーバーのみ
-npm run build:desktop # デスクトップアプリ
-
-# デスクトップアプリの開発
-npm run dev:desktop
+# Production
+npm run build          # Build web only
+npm run serve          # Build and serve production
 ```
 
-## 環境変数
+### Project Setup
 
-サーバーは以下の環境変数をサポートします:
+```bash
+# Install all dependencies
+npm install
 
-| 変数名 | 説明 | デフォルト |
-|--------|------|-----------|
-| `PORT` | サーバーポート | 3210 |
-| `HOST` | バインドアドレス | localhost |
-| `BASIC_AUTH_USER` | Basic認証ユーザー名 | (なし) |
-| `BASIC_AUTH_PASSWORD` | Basic認証パスワード | (なし) |
-| `CORS_ORIGIN` | CORS許可オリジン | * (開発時) |
-| `DEFAULT_ROOT` | デフォルトルートパス | (なし) |
+# Install workspace-specific dependencies
+npm --workspace apps/web install
+npm --workspace apps/server install
+npm --workspace apps/desktop install
+```
 
-## API
+---
 
-### ワークスペース
-- `GET /api/workspaces` - ワークスペース一覧
-- `POST /api/workspaces` - ワークスペース作成
+## Environment Variables
 
-### デッキ
-- `GET /api/decks` - デッキ一覧
-- `POST /api/decks` - デッキ作成
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `DEFAULT_ROOT` | Default workspace path | `os.homedir()` | No |
+| `PORT` | Server port | `8787` | No |
+| `HOST` | Server host | `0.0.0.0` | No |
+| `BASIC_AUTH_USER` | Basic auth username | - | Production |
+| `BASIC_AUTH_PASSWORD` | Basic auth password | - | Production |
+| `CORS_ORIGIN` | CORS origin | - | Production |
+| `NODE_ENV` | Environment | `development` | No |
+| `MAX_FILE_SIZE` | Max file size in bytes | `10485760` | No |
+| `TERMINAL_BUFFER_LIMIT` | Terminal buffer size | `50000` | No |
+| `TRUST_PROXY` | Trust X-Forwarded headers | `false` | No |
 
-### ファイル
-- `GET /api/files` - ファイル一覧
-- `GET /api/file` - ファイル読み込み
-- `PUT /api/file` - ファイル保存
-- `POST /api/file` - ファイル作成
-- `DELETE /api/file` - ファイル削除
+---
 
-### ターミナル
-- `GET /api/terminals` - ターミナル一覧
-- `POST /api/terminals` - ターミナル作成
-- `DELETE /api/terminals/:id` - ターミナル削除
-- `WS /api/terminals/:id` - ターミナル接続
+## API Endpoints
+
+### Workspaces
+
+```
+GET    /api/workspaces          - List all workspaces
+POST   /api/workspaces          - Create workspace
+GET    /api/config              - Get default root config
+```
+
+### Decks
+
+```
+GET    /api/decks               - List all decks
+POST   /api/decks               - Create deck
+```
+
+### Files
+
+```
+GET    /api/files               - List directory contents
+GET    /api/file                - Read file contents
+PUT    /api/file                - Write file contents
+POST   /api/file                - Create new file
+DELETE /api/file                - Delete file
+POST   /api/dir                 - Create directory
+DELETE /api/dir                 - Delete directory
+GET    /api/preview             - Preview directory
+```
+
+### Terminals
+
+```
+GET    /api/terminals           - List terminals for deck
+POST   /api/terminals           - Create terminal
+DELETE /api/terminals/:id       - Delete terminal
+WS     /api/terminals/:id       - Terminal WebSocket stream
+```
 
 ### Git
-- `GET /api/git/status` - Gitステータス
-- `GET /api/git/repos` - リポジトリ一覧
-- `POST /api/git/stage` - ステージング
-- `POST /api/git/unstage` - アンステージ
-- `POST /api/git/commit` - コミット
-- `POST /api/git/push` - プッシュ
-- `POST /api/git/pull` - プル
-- `GET /api/git/diff` - 差分取得
-- `GET /api/git/branches` - ブランチ一覧
-- `POST /api/git/checkout` - ブランチ切り替え
 
-## ライセンス
+```
+GET    /api/git/status          - Get Git status
+GET    /api/git/repos           - Find all Git repos
+GET    /api/git/multi-status    - Aggregated status from all repos
+POST   /api/git/stage           - Stage files
+POST   /api/git/unstage         - Unstage files
+POST   /api/git/commit          - Commit changes
+POST   /api/git/discard         - Discard changes
+GET    /api/git/diff            - Get file diff
+POST   /api/git/push            - Push to remote
+POST   /api/git/pull            - Pull from remote
+POST   /api/git/fetch           - Fetch from remote
+GET    /api/git/remotes         - List remotes
+GET    /api/git/branch-status   - Get branch status
+GET    /api/git/branches        - List branches
+POST   /api/git/checkout        - Checkout branch
+POST   /api/git/create-branch   - Create new branch
+GET    /api/git/log             - Get commit history
+```
 
-MIT
+### Context Manager
 
-## 作者
+```
+GET    /api/context-manager/status           - Get health status
+POST   /api/context-manager/session          - Create new session
+GET    /api/context-manager/session          - Get current session
+DELETE /api/context-manager/session          - End current session
+POST   /api/context-manager/compact          - Compact context
+POST   /api/context-manager/snapshot         - Create snapshot
+GET    /api/context-manager/snapshots        - List snapshots
+GET    /api/context-manager/snapshots/latest - Get latest snapshot
+GET    /api/context-manager/snapshots/healthiest - Get healthiest snapshot
+POST   /api/context-manager/snapshots/:commitHash/restore - Restore snapshot
+GET    /api/context-manager/stats            - Get statistics
+GET    /api/context-manager/sessions         - List sessions
+GET    /api/context-manager/sessions/:id     - Get specific session
+DELETE /api/context-manager/sessions/:id     - Delete session
+POST   /api/context-manager/track/message    - Track message
+POST   /api/context-manager/track/tool       - Track tool execution
+POST   /api/context-manager/track/error      - Track error
+GET    /api/context-manager/drift            - Analyze topic drift
+POST   /api/context-manager/trim             - Trim conversation output
+POST   /api/context-manager/start            - Start monitoring
+POST   /api/context-manager/stop             - Stop monitoring
+```
 
-[tako0614](https://github.com/tako0614)
+---
+
+## Context Manager Deep Dive
+
+### What is Context Rot?
+
+In long AI coding sessions, "context rot" occurs when:
+
+1. **Token bloat** - The conversation history grows too large, reducing relevant context
+2. **Topic drift** - The conversation wanders from the original goal
+3. **Noise accumulation** - Irrelevant back-and-forth obscures the actual work
+4. **Phase mixing** - Planning, implementation, and debugging get intermingled
+
+This leads to:
+- Reduced AI accuracy and relevance
+- Increased token costs
+- Slower response times
+- Agent losing track of original objectives
+
+### How the 7 Features Work
+
+#### 1. Health Score (0-100)
+
+Calculated based on:
+- Message count and token efficiency
+- Topic drift score
+- Phase clarity
+- Error rate
+- Code-to-chat ratio
+
+#### 2. Topic Drift Detection
+
+Uses semantic analysis to compare:
+- Initial prompt vs. recent messages
+- Keyword clustering over time
+- Intent coherence scoring
+
+#### 3. Session Compaction
+
+- Keeps last N messages intact (configurable)
+- Summarizes older messages into concise bullet points
+- Preserves code blocks and critical decisions
+- Reduces token count by 40-60%
+
+#### 4. Snapshot System
+
+- Saves complete conversation state
+- Includes health score at snapshot time
+- Enables rollback to any point
+- Useful for branching experiments
+
+#### 5. Auto-Compaction
+
+- Triggers when health score drops below threshold
+- Runs automatically in background
+- Preserves recent context
+- Optional: manual override
+
+#### 6. Phase Detection
+
+Identifies conversation phases:
+- **Planning** - Requirements and architecture discussion
+- **Implementation** - Active coding
+- **Debugging** - Error fixing and troubleshooting
+- **Review** - Code review and optimization
+
+#### 7. Smart Recommendations
+
+Actionable suggestions such as:
+- "Consider compacting - health score below 50"
+- "Topic drift detected - start new session?"
+- "High error rate - verify recent changes"
+- "Large files detected - consider splitting"
+
+### When to Use Each Feature
+
+| Situation | Action |
+|-----------|--------|
+| Health score drops below 50 | Run Compact |
+| Topic drift > 70% | Start new session |
+| Before major refactor | Create Snapshot |
+| After completing feature | Create Snapshot |
+| Conversation feels cluttered | Run Trim Output |
+| Switching to new feature | Create new session |
+| Want to experiment safely | Create Snapshot first |
+
+---
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+## Author
+
+**tako0614** - [GitHub](https://github.com/tako0614)
+
+---
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+---
+
+## Support
+
+For issues and questions:
+- Open an issue on [GitHub Issues](https://github.com/tako0614/ide/issues)
+- Check existing documentation in the `docs/` directory
