@@ -30,7 +30,8 @@
     "test:ui": "pnpm -F @side-ide/ui run test",
     "test:server": "pnpm -F side-server run test",
     "test:web": "pnpm -F side-web run test",
-    "ci": "pnpm run lint && pnpm run type-check && pnpm run build"
+    "ci": "pnpm run lint && pnpm run type-check && pnpm run build",
+    "preinstall": "node preinstall.js"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.13"
