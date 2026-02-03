@@ -1,66 +1,16 @@
 {
   "name": "deck-ide-desktop",
-  "description": "Deck IDE server manager for Windows",
-  "author": "Deck IDE",
-  "private": true,
-  "version": "2.9.0",
-  "main": "src/main.cjs",
+  "version": "2.0.0",
+  "type": "module",
   "scripts": {
-    "dev": "electron .",
-    "start": "electron .",
-    "build": "node scripts/prepare.cjs && electron-builder --win --x64"
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
   },
   "dependencies": {
-    "@deck-ide/shared": "file:../../packages/shared",
-    "@hono/node-server": "^1.13.0",
-    "electron-updater": "^6.1.7",
-    "hono": "^4.6.0",
-    "node-pty": "^1.0.0",
-    "simple-git": "^3.27.0",
-    "ws": "^8.18.0"
+    "@deck-ide/shared": "file:../../packages/shared"
   },
   "devDependencies": {
-    "electron": "40.0.0",
-    "electron-builder": "^24.13.3"
-  },
-  "build": {
-    "appId": "com.deck.ide",
-    "productName": "Deck IDE",
-    "electronVersion": "40.0.0",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "package.json",
-      "src/**/*",
-      "server/**/*",
-      "web/dist/**/*",
-      "node_modules/@deck-ide/**/*"
-    ],
-    "asarUnpack": [
-      "**/node-pty/**",
-      "server/**/*",
-      "web/dist/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "node_modules/@deck-ide",
-        "to": "app.asar.unpacked/node_modules/@deck-ide",
-        "filter": [
-          "**/*"
-        ]
-      }
-    ],
-    "publish": {
-      "provider": "github",
-      "owner": "tako0614",
-      "repo": "ide"
-    },
-    "win": {
-      "target": "nsis"
-    },
-    "nsis": {
-      "artifactName": "Deck-IDE-Setup-${version}.${ext}"
-    }
+    "@tauri-apps/cli": "^2.0.0"
   }
 }
