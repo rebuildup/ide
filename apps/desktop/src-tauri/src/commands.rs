@@ -103,3 +103,72 @@ pub struct TunnelStatus {
     pub running: bool,
     pub url: Option<String>,
 }
+
+// Environment check commands
+#[tauri::command]
+pub async fn check_environment() -> Result<EnvironmentInfo, String> {
+    let node_info = check_command_version("node", &["--version"]).await;
+    let npm_info = check_command_version("npm", &["--version"]).await;
+    let pnpm_info = check_command_version("pnpm", &["--version"]).await;
+
+    Ok(EnvironmentInfo {
+        node: node_info,
+        npm: npm_info,
+        pnpm: pnpm_info,
+    })
+}
+
+#[tauri::command]
+pub async fn check_port(port: u16) -> Result<PortStatus, String> {
+    use std::net::TcpListener;
+
+    let available = TcpListener::bind(format!("127.0.0.1:{}", port)).is_ok();
+
+    Ok(PortStatus {
+        port,
+        available,
+        in_use: !available,
+    })
+}
+
+#[derive(serde::Serialize)]
+pub struct EnvironmentInfo {
+    pub node: CommandInfo,
+    pub npm: CommandInfo,
+    pub pnpm: CommandInfo,
+}
+
+#[derive(serde::Serialize)]
+pub struct CommandInfo {
+    pub available: bool,
+    pub version: Option<String>,
+}
+
+#[derive(serde::Serialize)]
+pub struct PortStatus {
+    pub port: u16,
+    pub available: bool,
+    pub in_use: bool,
+}
+
+async fn check_command_version(command: &str, args: &[&str]) -> CommandInfo {
+    match tokio::process::Command::new(command)
+        .args(args)
+        .output()
+        .await
+    {
+        Ok(output) => {
+            let version = String::from_utf8_lossy(&output.stdout)
+                .trim()
+                .to_string();
+            CommandInfo {
+                available: true,
+                version: if version.is_empty() { None } else { Some(version) },
+            }
+        }
+        Err(_) => CommandInfo {
+            available: false,
+            version: None,
+        },
+    }
+}

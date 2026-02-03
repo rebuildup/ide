@@ -1,4 +1,5 @@
 import { type ReactNode, useMemo } from "react";
+import { Settings } from "lucide-react";
 
 interface GlobalStatusBarProps {
   serverStatus?: ReactNode;
@@ -6,6 +7,7 @@ interface GlobalStatusBarProps {
   activeTerminalsCount?: number;
   contextHealthScore?: number;
   onToggleContextStatus?: () => void;
+  onOpenEnvironmentModal?: () => void;
 }
 
 // Type definition for performance.memory API (Chrome-specific)
@@ -25,6 +27,7 @@ export function GlobalStatusBar({
   activeTerminalsCount = 0,
   contextHealthScore = 100,
   onToggleContextStatus,
+  onOpenEnvironmentModal,
 }: GlobalStatusBarProps) {
   // Get memory usage if available
   const memoryUsage = useMemo(() => {
@@ -78,6 +81,24 @@ export function GlobalStatusBar({
         )}
       </div>
       <div className="global-statusbar-right">
+        {onOpenEnvironmentModal && (
+          <button
+            className="statusbar-item statusbar-clickable"
+            onClick={onOpenEnvironmentModal}
+            title="Environment Status"
+            style={{
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+            }}
+          >
+            <Settings size={14} />
+            <span>Environment</span>
+          </button>
+        )}
         <span className="statusbar-item">WebSocket: Active</span>
         <span className="statusbar-item">Terminals: {activeTerminalsCount}</span>
         {memoryUsage && <span className="statusbar-item">Memory: {memoryUsage}</span>}

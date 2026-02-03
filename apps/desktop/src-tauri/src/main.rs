@@ -32,6 +32,8 @@ pub fn run() {
             commands::start_tunnel,
             commands::stop_tunnel,
             commands::get_tunnel_status,
+            commands::check_environment,
+            commands::check_port,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

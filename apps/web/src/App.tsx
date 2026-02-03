@@ -11,6 +11,7 @@ import { FileTree } from "./components/FileTree";
 import { GlobalStatusBar } from "./components/GlobalStatusBar";
 import { ServerModal } from "./components/ServerModal";
 import { ServerStartupScreen } from "./components/ServerStartupScreen";
+import { EnvironmentModal } from "./components/EnvironmentModal";
 import { ServerStatus } from "./components/ServerStatus";
 import { SettingsModal } from "./components/SettingsModal";
 import { SourceControl } from "./components/SourceControl";
@@ -21,6 +22,8 @@ import { TunnelControl } from "./components/TunnelControl";
 import { WelcomeScreen } from "./components/WelcomeScreen";
 import { WorkspaceList } from "./components/WorkspaceList";
 import { WorkspaceModal } from "./components/WorkspaceModal";
+import { AgentTabBar } from "./components/AgentTabs";
+import { CommonSettings } from "./components/AgentSettings";
 import {
   DEFAULT_ROOT_FALLBACK,
   MESSAGE_SAVED,
@@ -57,7 +60,13 @@ export default function App() {
   const [isDeckModalOpen, setIsDeckModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isServerModalOpen, setIsServerModalOpen] = useState(false);
+  const [isEnvironmentModalOpen, setIsEnvironmentModalOpen] = useState(false);
+  const [isCommonSettingsOpen, setIsCommonSettingsOpen] = useState(false);
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>("files");
+
+  // Agent state
+  const [agents, setAgents] = useState<Array<{ id: string; name: string; icon: string; description: string; enabled: boolean }>>([]);
+  const [activeAgent, setActiveAgent] = useState<string | null>(null);
 
   const { workspaceStates, setWorkspaceStates, updateWorkspaceState, initializeWorkspaceStates } =
     useWorkspaceState();
@@ -230,6 +239,29 @@ export default function App() {
     const timer = setTimeout(() => setStatusMessage(""), SAVED_MESSAGE_TIMEOUT);
     return () => clearTimeout(timer);
   }, [statusMessage]);
+
+  // Load available agents
+  useEffect(() => {
+    const fetchAgents = async () => {
+      try {
+        const res = await fetch("/api/agents");
+        if (res.ok) {
+          const data = await res.json();
+          setAgents(data);
+          // Set first enabled agent as active if none selected
+          if (!activeAgent && data.length > 0) {
+            const firstEnabled = data.find((a: { enabled: boolean }) => a.enabled);
+            if (firstEnabled) {
+              setActiveAgent(firstEnabled.id);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load agents:", err);
+      }
+    };
+    fetchAgents();
+  }, []);
 
   useEffect(() => {
     if (workspaceMode === "editor" && !editorWorkspaceId) {
@@ -693,6 +725,26 @@ export default function App() {
       />
       <main className="main">
         <div className="unified-layout">
+          {/* Agent Tabs Section */}
+          {agents.length > 0 && (
+            <div className="agent-tabs-section">
+              <AgentTabBar
+                agents={agents}
+                activeAgent={activeAgent}
+                onAgentSelect={setActiveAgent}
+                onAgentClose={(agentId) => {
+                  if (activeAgent === agentId) {
+                    setActiveAgent(null);
+                  }
+                }}
+              />
+              {activeAgent && (
+                <div className="agent-content">
+                  {/* Agent-specific content can be rendered here */}
+                </div>
+              )}
+            </div>
+          )}
           {workspaceView}
           {terminalSection}
         </div>
@@ -704,6 +756,7 @@ export default function App() {
         activeTerminalsCount={activeTerminalsCount}
         contextHealthScore={contextHealthScore}
         onToggleContextStatus={() => setShowContextStatus((prev) => !prev)}
+        onOpenEnvironmentModal={() => setIsEnvironmentModalOpen(true)}
       />
       {showContextStatus && (
         <div className="context-status-overlay" onClick={() => setShowContextStatus(false)}>
@@ -734,6 +787,14 @@ export default function App() {
         status={serverStatus.status}
         port={serverStatus.port}
         onClose={() => setIsServerModalOpen(false)}
+      />
+      <EnvironmentModal
+        isOpen={isEnvironmentModalOpen}
+        onClose={() => setIsEnvironmentModalOpen(false)}
+      />
+      <CommonSettings
+        isOpen={isCommonSettingsOpen}
+        onClose={() => setIsCommonSettingsOpen(false)}
       />
     </div>
   );
