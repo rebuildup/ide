@@ -34,6 +34,14 @@
   --surface: #141414;
   --hover: rgba(255, 255, 255, 0.1);
   --text: #ffffff;
+
+  /* 6-Column Grid System Variables */
+  --grid-6-cols: repeat(6, 1fr);
+  --grid-5-cols: repeat(5, 1fr);
+  --grid-4-cols: repeat(4, 1fr);
+  --grid-3-cols: repeat(3, 1fr);
+  --grid-2-cols: repeat(2, 1fr);
+  --grid-1-col: 1fr;
 }
 
 /* ========================================
@@ -1737,11 +1745,12 @@ textarea {
   border-color: #00a86b;
 }
 
-/* Split Container */
+/* Split Container - using 6-column grid system */
 .terminal-split-container {
   flex: 1;
   min-height: 0;
   display: grid;
+  grid-template-columns: var(--grid-6-cols);
   gap: 4px;
   padding: 4px;
 }
@@ -1951,8 +1960,54 @@ textarea {
   margin: 0 2px;
 }
 
+/* ========================================
+   6-Column Responsive Grid System
+   ======================================== */
+
+/* Base 6-column grid */
+.grid-6 {
+  display: grid;
+  grid-template-columns: var(--grid-6-cols);
+  gap: 4px;
+  min-height: 0;
+}
+
+/* Column span classes */
+.col-span-1 { grid-column: span 1; }
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+.col-span-4 { grid-column: span 4; }
+.col-span-5 { grid-column: span 5; }
+.col-span-6 { grid-column: span 6; }
+
+/* Column start classes */
+.col-start-1 { grid-column-start: 1; }
+.col-start-2 { grid-column-start: 2; }
+.col-start-3 { grid-column-start: 3; }
+.col-start-4 { grid-column-start: 4; }
+.col-start-5 { grid-column-start: 5; }
+.col-start-6 { grid-column-start: 6; }
+
+/* Row span classes */
+.row-span-1 { grid-row: span 1; }
+.row-span-2 { grid-row: span 2; }
+.row-span-3 { grid-row: span 3; }
+.row-span-4 { grid-row: span 4; }
+.row-span-5 { grid-row: span 5; }
+.row-span-6 { grid-row: span 6; }
+
+/* Row start classes */
+.row-start-1 { grid-row-start: 1; }
+.row-start-2 { grid-row-start: 2; }
+.row-start-3 { grid-row-start: 3; }
+.row-start-4 { grid-row-start: 4; }
+.row-start-5 { grid-row-start: 5; }
+.row-start-6 { grid-row-start: 6; }
+
+/* Terminal grid using 6-column system */
 .terminal-grid {
   display: grid;
+  grid-template-columns: var(--grid-6-cols);
   gap: 4px;
   min-height: 0;
   flex: 1;
@@ -2925,6 +2980,113 @@ input:focus-visible {
    Responsive
    ======================================== */
 
+/* 6-Column Grid Responsive Breakpoints */
+@media (max-width: 1920px) {
+  .grid-6 {
+    grid-template-columns: var(--grid-5-cols);
+  }
+}
+
+@media (max-width: 1600px) {
+  .grid-6 {
+    grid-template-columns: var(--grid-4-cols);
+  }
+}
+
+@media (max-width: 1280px) {
+  .grid-6 {
+    grid-template-columns: var(--grid-3-cols);
+  }
+}
+
+@media (max-width: 960px) {
+  .grid-6 {
+    grid-template-columns: var(--grid-2-cols);
+  }
+}
+
+@media (max-width: 640px) {
+  .grid-6 {
+    grid-template-columns: var(--grid-1-col);
+  }
+}
+
+/* Terminal grid responsive overrides */
+@media (max-width: 1920px) {
+  .terminal-grid,
+  .terminal-split-container {
+    grid-template-columns: var(--grid-5-cols);
+  }
+}
+
+@media (max-width: 1600px) {
+  .terminal-grid,
+  .terminal-split-container {
+    grid-template-columns: var(--grid-4-cols);
+  }
+}
+
+@media (max-width: 1280px) {
+  .terminal-grid,
+  .terminal-split-container {
+    grid-template-columns: var(--grid-3-cols);
+  }
+}
+
+@media (max-width: 960px) {
+  .terminal-grid,
+  .terminal-split-container {
+    grid-template-columns: var(--grid-2-cols);
+  }
+}
+
+@media (max-width: 640px) {
+  .terminal-grid,
+  .terminal-split-container {
+    grid-template-columns: var(--grid-1-col);
+  }
+}
+
+/* Terminal tiles responsive sizing */
+@media (max-width: 1280px) {
+  .terminal-tile {
+    min-height: 180px;
+  }
+}
+
+@media (max-width: 960px) {
+  .terminal-tile {
+    min-height: 200px;
+  }
+}
+
+@media (max-width: 640px) {
+  .terminal-tile {
+    min-height: 250px;
+  }
+
+  .terminal-tile-header {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
+
+/* Context Status Panel responsive styles */
+@media (max-width: 640px) {
+  .context-status-panel {
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .context-status-panel {
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
 @media (max-width: 1024px) {
   .workspace-editor-grid {
     grid-template-columns: 48px 1fr;
@@ -3034,4 +3196,97 @@ input:focus-visible {
 
 .statusbar-clickable:active {
   opacity: 0.5;
+}
+
+/* ========================================
+   Context Status Component Styles
+   ======================================== */
+
+.context-status {
+  padding: 16px;
+  min-width: 300px;
+}
+
+.context-health-gauge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.context-health-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-soft);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.context-health-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.context-health-fill.excellent { background: #4caf50; }
+.context-health-fill.good { background: #8bc34a; }
+.context-health-fill.warning { background: #ff9800; }
+.context-health-fill.critical { background: #f44336; }
+
+.context-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.context-metric {
+  padding: 8px;
+  background: var(--bg-soft);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.context-metric-label {
+  color: var(--ink-muted);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.context-metric-value {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.context-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.context-action-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-soft);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.context-action-btn:hover {
+  background: var(--list-hover);
+}
+
+.context-action-btn.primary {
+  background: var(--accent);
+  color: #000;
+}
+
+.context-action-btn.danger {
+  background: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+  border-color: rgba(244, 67, 54, 0.3);
 }

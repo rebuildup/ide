@@ -34,170 +34,52 @@ const api = {
   },
 };
 
-// Health score color coding
-function getHealthColor(score: number): { bg: string; text: string; label: string } {
-  if (score >= 80) return { bg: '#22c55e', text: '#166534', label: 'Excellent' };
-  if (score >= 50) return { bg: '#eab308', text: '#854d0e', label: 'Good' };
-  if (score >= 30) return { bg: '#f97316', text: '#9a3412', label: 'Warning' };
-  return { bg: '#ef4444', text: '#991b1b', label: 'Critical' };
+// Health score color coding - returns CSS class name and display info
+function getHealthInfo(score: number): { className: string; label: string; color: string } {
+  if (score >= 80) return { className: 'excellent', label: 'Excellent', color: '#4caf50' };
+  if (score >= 50) return { className: 'good', label: 'Good', color: '#8bc34a' };
+  if (score >= 30) return { className: 'warning', label: 'Warning', color: '#ff9800' };
+  return { className: 'critical', label: 'Critical', color: '#f44336' };
 }
 
 // Drift score color coding
 function getDriftColor(score: number): string {
-  if (score >= 0.7) return '#ef4444';
-  if (score >= 0.4) return '#f97316';
-  return '#22c55e';
+  if (score >= 0.7) return '#f44336';
+  if (score >= 0.4) return '#ff9800';
+  return '#4caf50';
 }
 
-// Styles
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '12px',
-    padding: '12px',
-    borderRadius: '8px',
-    backgroundColor: '#1e1e1e',
-    border: '1px solid #333',
-    minWidth: '280px',
-    maxWidth: '400px',
-  },
+// Helper to get health class CSS class
+function getHealthClass(score: number): string {
+  const info = getHealthInfo(score);
+  return `context-health-fill ${info.className}`;
+}
+
+// Inline styles for dynamic values (colors, widths, etc.)
+const dynamicStyles = {
   compactContainer: {
     display: 'flex',
     alignItems: 'center' as const,
     gap: '12px',
     padding: '8px 12px',
     borderRadius: '6px',
-    backgroundColor: '#1e1e1e',
-    border: '1px solid #333',
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center' as const,
-    justifyContent: 'space-between',
-    gap: '8px',
-  },
-  title: {
-    fontSize: '14px',
-    fontWeight: 600,
-    color: '#e5e5e5',
-    margin: 0,
-  },
-  healthSection: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '8px',
-  },
-  healthHeader: {
-    display: 'flex',
-    alignItems: 'center' as const,
-    justifyContent: 'space-between',
-  },
-  healthScore: {
-    fontSize: '24px',
-    fontWeight: 700,
-  },
-  healthLabel: {
-    fontSize: '12px',
-    fontWeight: 500,
-    padding: '2px 8px',
-    borderRadius: '4px',
-    textTransform: 'uppercase' as const,
-  },
-  gaugeContainer: {
-    height: '8px',
-    borderRadius: '4px',
-    backgroundColor: '#333',
-    overflow: 'hidden' as const,
-  },
-  gaugeBar: {
-    height: '100%',
-    transition: 'width 0.3s ease, background-color 0.3s ease',
-  },
-  metrics: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '8px',
-  },
-  metric: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '2px',
-    padding: '8px',
-    borderRadius: '4px',
-    backgroundColor: '#2a2a2a',
-  },
-  metricLabel: {
-    fontSize: '11px',
-    color: '#a3a3a3',
-    textTransform: 'uppercase' as const,
-  },
-  metricValue: {
-    fontSize: '16px',
-    fontWeight: 600,
-    color: '#e5e5e5',
-  },
-  recommendations: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '6px',
-    padding: '10px',
-    borderRadius: '4px',
-    backgroundColor: '#2a2a2a',
-    borderLeft: '3px solid',
-  },
-  recommendationsTitle: {
-    fontSize: '12px',
-    fontWeight: 600,
-    color: '#e5e5e5',
-    margin: '0 0 4px 0',
-  },
-  recommendation: {
-    fontSize: '12px',
-    color: '#d4d4d4',
-    margin: 0,
-    paddingLeft: '12px',
-    position: 'relative' as const,
-  },
-  recommendationBefore: {
-    content: '"•"',
-    position: 'absolute' as const,
-    left: 0,
-  },
-  actions: {
-    display: 'flex',
-    gap: '8px',
-    flexWrap: 'wrap' as const,
-  },
-  button: {
-    padding: '6px 12px',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontWeight: 500,
-    border: 'none',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-  },
-  buttonPrimary: {
-    backgroundColor: '#3b82f6',
-    color: '#ffffff',
-  },
-  buttonSecondary: {
-    backgroundColor: '#404040',
-    color: '#e5e5e5',
-  },
-  buttonDanger: {
-    backgroundColor: '#ef4444',
-    color: '#ffffff',
+    backgroundColor: 'var(--bg-tertiary)',
+    border: '1px solid var(--border)',
   },
   compactHealthBar: {
     width: '60px',
     height: '6px',
     borderRadius: '3px',
-    backgroundColor: '#333',
+    backgroundColor: 'var(--bg-soft)',
     overflow: 'hidden' as const,
-    position: 'relative' as const,
   },
+  compactHealthFill: (width: number, color: string) => ({
+    height: '100%',
+    width: `${width}%`,
+    backgroundColor: color,
+    borderRadius: '3px',
+    transition: 'width 0.3s ease, background-color 0.3s ease',
+  }),
   compactMetric: {
     display: 'flex',
     flexDirection: 'column' as const,
@@ -205,19 +87,81 @@ const styles = {
   },
   compactLabel: {
     fontSize: '10px',
-    color: '#a3a3a3',
+    color: 'var(--ink-muted)',
   },
-  compactValue: {
+  compactValue: (color: string) => ({
     fontSize: '14px',
     fontWeight: 600,
-    color: '#e5e5e5',
+    color: color,
+  }),
+  compactButton: {
+    padding: '4px 8px',
+    borderRadius: '4px',
+    fontSize: '12px',
+    backgroundColor: 'var(--bg-soft)',
+    color: 'var(--ink)',
+    border: '1px solid var(--border)',
+    cursor: 'pointer',
+    minWidth: '28px',
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center' as const,
+    justifyContent: 'space-between',
+    marginBottom: '12px',
+  },
+  title: {
+    fontSize: '14px',
+    fontWeight: 600,
+    color: 'var(--ink)',
+    margin: 0,
+  },
+  healthLabel: (color: string) => ({
+    fontSize: '11px',
+    fontWeight: 600,
+    padding: '2px 8px',
+    borderRadius: '4px',
+    textTransform: 'uppercase' as const,
+    backgroundColor: color,
+    color: '#000',
+  }),
+  healthScoreDisplay: {
+    fontSize: '24px',
+    fontWeight: 700,
+  },
+  metricValueColored: (color: string) => ({
+    fontSize: '14px',
+    fontWeight: 600,
+    color: color,
+  }),
+  recommendations: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '6px',
+    padding: '10px',
+    borderRadius: '4px',
+    backgroundColor: 'var(--bg-soft)',
+    borderLeft: '3px solid',
+  },
+  recommendationsTitle: {
+    fontSize: '12px',
+    fontWeight: 600,
+    color: 'var(--ink)',
+    margin: '0 0 4px 0',
+  },
+  recommendation: {
+    fontSize: '12px',
+    color: 'var(--ink-dim)',
+    margin: 0,
+    paddingLeft: '12px',
+    position: 'relative' as const,
   },
   loading: {
     display: 'flex',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     padding: '20px',
-    color: '#a3a3a3',
+    color: 'var(--ink-muted)',
     fontSize: '14px',
   },
   error: {
@@ -281,16 +225,16 @@ export const ContextStatus: React.FC<ContextStatusProps> = ({ compact = false, o
   };
 
   if (loading && !status) {
-    return <div style={styles.loading}>Loading...</div>;
+    return <div style={dynamicStyles.loading}>Loading...</div>;
   }
 
   if (error && !status) {
-    return <div style={styles.error}>{error}</div>;
+    return <div style={dynamicStyles.error}>{error}</div>;
   }
 
   if (!status) return null;
 
-  const healthColor = getHealthColor(status.healthScore);
+  const healthInfo = getHealthInfo(status.healthScore);
   const driftColor = getDriftColor(status.driftScore);
   const showNewSession = status.driftScore > 0.5;
   const showRecommendations = status.healthScore < 50 && status.recommendations && status.recommendations.length > 0;
@@ -298,30 +242,23 @@ export const ContextStatus: React.FC<ContextStatusProps> = ({ compact = false, o
   // Compact mode
   if (compact) {
     return (
-      <div style={styles.compactContainer}>
-        <div style={styles.compactHealthBar}>
-          <div
-            style={{
-              ...styles.gaugeBar,
-              width: `${status.healthScore}%`,
-              backgroundColor: healthColor.bg,
-            }}
-          />
+      <div style={dynamicStyles.compactContainer}>
+        <div style={dynamicStyles.compactHealthBar}>
+          <div style={dynamicStyles.compactHealthFill(status.healthScore, healthInfo.color)} />
         </div>
-        <div style={styles.compactMetric}>
-          <span style={styles.compactLabel}>Health</span>
-          <span style={{ ...styles.compactValue, color: healthColor.text }}>{status.healthScore}</span>
+        <div style={dynamicStyles.compactMetric}>
+          <span style={dynamicStyles.compactLabel}>Health</span>
+          <span style={dynamicStyles.compactValue(healthInfo.color)}>{status.healthScore}</span>
         </div>
-        <div style={styles.compactMetric}>
-          <span style={styles.compactLabel}>Drift</span>
-          <span style={{ ...styles.compactValue, color: driftColor }}>{(status.driftScore * 100).toFixed(0)}%</span>
+        <div style={dynamicStyles.compactMetric}>
+          <span style={dynamicStyles.compactLabel}>Drift</span>
+          <span style={dynamicStyles.compactValue(driftColor)}>{(status.driftScore * 100).toFixed(0)}%</span>
         </div>
         <button
           onClick={handleCompact}
           disabled={actionLoading !== null}
           style={{
-            ...styles.button,
-            ...styles.buttonSecondary,
+            ...dynamicStyles.compactButton,
             opacity: actionLoading ? 0.6 : 1,
           }}
           title="Compact context"
@@ -334,68 +271,56 @@ export const ContextStatus: React.FC<ContextStatusProps> = ({ compact = false, o
 
   // Full mode
   return (
-    <div style={styles.container}>
+    <div className="context-status">
       {/* Header */}
-      <div style={styles.header}>
-        <h3 style={styles.title}>Context Manager</h3>
-        <span
-          style={{
-            ...styles.healthLabel,
-            backgroundColor: healthColor.bg,
-            color: healthColor.text,
-          }}
-        >
-          {healthColor.label}
+      <div style={dynamicStyles.header}>
+        <h3 style={dynamicStyles.title}>Context Manager</h3>
+        <span style={dynamicStyles.healthLabel(healthInfo.color)}>
+          {healthInfo.label}
         </span>
       </div>
 
       {/* Health Score Gauge */}
-      <div style={styles.healthSection}>
-        <div style={styles.healthHeader}>
-          <span style={styles.metricLabel}>Health Score</span>
-          <span style={{ ...styles.healthScore, color: healthColor.text }}>
-            {status.healthScore}
-          </span>
-        </div>
-        <div style={styles.gaugeContainer}>
+      <div className="context-health-gauge">
+        <div className="context-health-bar">
           <div
-            style={{
-              ...styles.gaugeBar,
-              width: `${status.healthScore}%`,
-              backgroundColor: healthColor.bg,
-            }}
+            className={getHealthClass(status.healthScore)}
+            style={{ width: `${status.healthScore}%` }}
           />
         </div>
+        <span style={{ ...dynamicStyles.healthScoreDisplay, color: healthInfo.color }}>
+          {status.healthScore}
+        </span>
       </div>
 
       {/* Metrics Grid */}
-      <div style={styles.metrics}>
-        <div style={styles.metric}>
-          <span style={styles.metricLabel}>Drift Score</span>
-          <span style={{ ...styles.metricValue, color: driftColor }}>
+      <div className="context-metrics">
+        <div className="context-metric">
+          <span className="context-metric-label">Drift Score</span>
+          <span className="context-metric-value" style={{ color: driftColor }}>
             {status.driftScore.toFixed(2)}
           </span>
         </div>
-        <div style={styles.metric}>
-          <span style={styles.metricLabel}>Phase</span>
-          <span style={styles.metricValue}>{status.currentPhase}</span>
+        <div className="context-metric">
+          <span className="context-metric-label">Phase</span>
+          <span className="context-metric-value">{status.currentPhase}</span>
         </div>
-        <div style={styles.metric}>
-          <span style={styles.metricLabel}>Messages</span>
-          <span style={styles.metricValue}>{status.messageCount}</span>
+        <div className="context-metric">
+          <span className="context-metric-label">Messages</span>
+          <span className="context-metric-value">{status.messageCount}</span>
         </div>
-        <div style={styles.metric}>
-          <span style={styles.metricLabel}>Tokens</span>
-          <span style={styles.metricValue}>{status.tokenCount.toLocaleString()}</span>
+        <div className="context-metric">
+          <span className="context-metric-label">Tokens</span>
+          <span className="context-metric-value">{status.tokenCount.toLocaleString()}</span>
         </div>
       </div>
 
       {/* Recommendations */}
       {showRecommendations && status.recommendations && (
-        <div style={{ ...styles.recommendations, borderLeftColor: healthColor.bg }}>
-          <p style={styles.recommendationsTitle}>Recommendations</p>
+        <div style={{ ...dynamicStyles.recommendations, borderLeftColor: healthInfo.color }}>
+          <p style={dynamicStyles.recommendationsTitle}>Recommendations</p>
           {status.recommendations.map((rec, idx) => (
-            <p key={idx} style={styles.recommendation}>
+            <p key={idx} style={dynamicStyles.recommendation}>
               {rec}
             </p>
           ))}
@@ -403,36 +328,27 @@ export const ContextStatus: React.FC<ContextStatusProps> = ({ compact = false, o
       )}
 
       {/* Actions */}
-      <div style={styles.actions}>
+      <div className="context-actions">
         <button
+          className="context-action-btn primary"
           onClick={handleCompact}
           disabled={actionLoading !== null}
-          style={{
-            ...styles.button,
-            ...styles.buttonPrimary,
-            opacity: actionLoading ? 0.6 : 1,
-          }}
+          style={{ opacity: actionLoading ? 0.6 : 1 }}
         >
           {actionLoading === 'compact' ? 'Compacting...' : 'Compact'}
         </button>
         <button
+          className="context-action-btn"
           onClick={handleSnapshot}
           disabled={actionLoading !== null}
-          style={{
-            ...styles.button,
-            ...styles.buttonSecondary,
-            opacity: actionLoading ? 0.6 : 1,
-          }}
+          style={{ opacity: actionLoading ? 0.6 : 1 }}
         >
           {actionLoading === 'snapshot' ? 'Snapshotting...' : 'Snapshot'}
         </button>
         {showNewSession && (
           <button
+            className="context-action-btn danger"
             onClick={() => window.location.reload()}
-            style={{
-              ...styles.button,
-              ...styles.buttonDanger,
-            }}
           >
             New Session
           </button>
@@ -440,7 +356,7 @@ export const ContextStatus: React.FC<ContextStatusProps> = ({ compact = false, o
       </div>
 
       {/* Error message */}
-      {error && <div style={styles.error}>{error}</div>}
+      {error && <div style={dynamicStyles.error}>{error}</div>}
     </div>
   );
 };

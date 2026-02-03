@@ -156,12 +156,14 @@ export default function App() {
   const [contextHealthScore, setContextHealthScore] = useState<number>(100);
 
   const handleContextStatusChange = useCallback((status: { healthScore: number }) => {
-    setContextHealthScore(status.healthScore);
-    // Show notification when health score drops
-    if (status.healthScore < 50 && contextHealthScore >= 50) {
-      setStatusMessage('Context health is low. Consider compacting.');
-    }
-  }, [contextHealthScore]);
+    setContextHealthScore((prevHealthScore) => {
+      // Show notification when health score drops
+      if (status.healthScore < 50 && prevHealthScore >= 50) {
+        setStatusMessage('Context health is low. Consider compacting.');
+      }
+      return status.healthScore;
+    });
+  }, []);
 
   useEffect(() => {
     let alive = true;
