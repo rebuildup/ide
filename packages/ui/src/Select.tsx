@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 export interface SelectOption {
   value: string;
@@ -21,7 +21,8 @@ export const Select: React.FC<SelectProps> = ({
   id,
   ...props
 }) => {
-  const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
+  const generatedId = useId();
+  const selectId = id || generatedId;
   const sizeClasses = {
     sm: 'px-2 py-1 text-sm',
     md: 'px-3 py-2 text-base',

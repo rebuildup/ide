@@ -31,12 +31,14 @@ export const Modal: React.FC<ModalProps> = ({
         if (firstElement) firstElement.focus();
       }
       document.body.style.overflow = 'hidden';
-    } else {
+    }
+    return () => {
+      // Cleanup: restore overflow on unmount
       document.body.style.overflow = '';
       if (previousActiveElement.current) {
         previousActiveElement.current.focus();
       }
-    }
+    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -49,8 +51,14 @@ export const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div onClick={handleBackdropClick} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div
         ref={modalRef}
         className={`bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto ${className}`}
